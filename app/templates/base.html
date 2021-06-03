@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Name - {{title}}</title>
+    <link rel='stylesheet' href="{{ url_for('static', filename='base.css')}}" />
+    {% endblock head %}
+</head>
+
+<body>
+
+    <header class='nav-bar'>
+        <nav>
+            <label class="logo">App Name</label>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="">About</a></li>
+                <li><a href="">Why?</a></li>
+            </ul>
+            <ul class="login-register-links">
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock content %}
+    </main>
+</body>
+
+</html>

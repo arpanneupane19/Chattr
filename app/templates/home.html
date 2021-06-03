@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{% endblock %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{url_for('static', filename='home.css')}}" />
+{% endblock head %}
+
+{% block content %}
+
+<div class="container">
+    <section id="landing">
+        <div class='intro'>
+            <div class="header">
+                <p>Message how you want.</p>
+            </div>
+            <div class="application-info">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+                dolore
+                magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea.
+            </div>
+            <div class="login-register">
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock content %}
