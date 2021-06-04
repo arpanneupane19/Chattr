@@ -2,23 +2,44 @@
 {% block title %}{% endblock %}
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="{{url_for('static', filename='login-register.css')}}" />
 {% endblock head %}
 
 {% block content %}
 
-<div class="container">
-    <div class="form">
-        <h2 style='text-align:center;'>Login</h2>
-        <br>
-        <form method='POST'>
-            {{form.hidden_tag()}}
-            {{form.username()}}<br>
-            {{form.password()}}<br>
-            {{form.submit()}}<br>
-            <a href="" style='color: #007fff'>Forgot password?</a>
-            <a href="{{ url_for('register') }}" style='color: #007fff'>Don't have an account? Register now.</a><br>
-        </form>
+<div class="uk-container">
+    <div
+        class="uk-card uk-card-default uk-card-body uk-width-large uk-flex uk-flex-center uk-margin-medium-top uk-margin-auto">
+        <fieldset class="uk-fieldset">
+            <label class="uk-legend">Login</label>
+            <form method='POST'>
+                {{form.hidden_tag()}}
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        {{form.username(class="uk-input")}}
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium">
+                        <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                        {{form.password(class="uk-input")}}
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <div class='uk-inline uk-width-medium'>
+                        {{form.submit(class="uk-button uk-width-9-10 uk-button-primary")}}
+                    </div>
+                </div>
+                <div class='uk-margin'>
+                    Don't have an account? <a class="uk-link" href="{{ url_for('register') }}">Register now.</a>
+                </div>
+                <div class='uk-margin'>
+                    <a class="uk-link" href="{{ url_for('register') }}">Forgot password?</a>
+                </div>
+            </form>
+        </fieldset>
     </div>
 </div>
 
