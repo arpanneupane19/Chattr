@@ -2,28 +2,29 @@
 {% block title %}{% endblock %}
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="{{url_for('static', filename='home.css')}}" />
 {% endblock head %}
 
 {% block content %}
 
-<div class="container">
-    <section id="landing">
-        <div class='intro'>
-            <div class="header">
-                <p>Message how you want.</p>
-            </div>
-            <div class="application-info">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+<div class="uk-container">
+    <section id='landing'>
+        <div class="uk-card uk-card-body uk-card-hover uk-card-large uk-margin-medium-top">
+            <h3 class="uk-card-title">Message how you want.</h3>
+            <p> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
                 dolore
                 magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea.
-            </div>
-            <div class="login-register">
-                <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('register') }}">Register</a>
+            </p>
+            <div class="uk-flex uk-flex-left">
+                <div>
+                    <a class="uk-link uk-margin-right" href="{{ url_for('login') }}">Login</a>
+                </div>
+                <div>
+                    <a class="uk-link" href="{{ url_for('register') }}">Register</a>
+                </div>
             </div>
         </div>
     </section>
+
 </div>
 
 {% endblock content %}
