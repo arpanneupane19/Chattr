@@ -3,7 +3,8 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
-from app.main import *
+from .main import *
+
 
 class RegisterForm(FlaskForm):
     email = StringField("Email", validators=[InputRequired(), Email(
