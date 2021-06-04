@@ -1,7 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_mail import Mail, Message
+from flask_mail import Mail, Message as MailMessage
 import os
 from .forms import *
 from datetime import datetime
@@ -14,11 +14,10 @@ from PIL import Image
 from flask_socketio import SocketIO, emit, send, join_room
 from flask_sslify import SSLify
 import json
-
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 # Initializing packages
 app = Flask(__name__)
-mail = Mail(app)
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -30,11 +29,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = os.environ.get("EMAIL_BLOGGY")
-app.config['MAIL_PASSWORD'] = os.environ.get("PASSWORD_BLOGGY")
+app.config['MAIL_USERNAME'] = os.environ.get('EMAIL')
+app.config['MAIL_PASSWORD'] = os.environ.get('PASSWORD')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
 
+# Reset password 
+s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 # Login manager
 login_manager = LoginManager()
@@ -130,3 +132,45 @@ def logout():
 @login_required
 def dashboard():
     return render_template('dashboard.html', title="Dashboard")
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    form = PasswordResetRequestForm()
+    if form.validate_on_submit():
+        # Check if user exists in order to send email
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            token = s.dumps(form.email.data, salt='forgot-password')
+            msg = MailMessage('Password Reset Request',sender='noreply@demo.com', recipients=[form.email.data])
+            msg.body = f''' 
+            Hello {user.username}, we noticed that you wanted to reset your password. 
+            To reset your password, use the link at the bottom of this email (this link will expire in 2 minutes). If this request was accidental, you may ignore this email.
+            {url_for('reset_password', token=token, _external=True)}
+            '''
+            mail.send(msg)
+            flash("A reset link has been sent to the email address.")
+        if not user:
+            flash("That account does not exist.")
+    return render_template('forgot_password.html', title='Forgot Password', form=form)
+
+
+@app.route('/reset-password/<token>', methods=['GET','POST'])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt='forgot-password', max_age=120)
+    except SignatureExpired:
+        return "<h1>This token is expired. Please try again.</h1>"
+    except BadTimeSignature:
+        return "<h1>This token is invalid</h1>"   
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            hashed_password = bcrypt.generate_password_hash(form.password.data)
+            user.password = hashed_password
+            db.session.commit()
+            flash("Your password has successfully been reset! You are able to log in now.")
+        if not user:
+            flash("This account does not exist.")
+    return render_template('reset_password.html', form=form, title='Reset Password')
