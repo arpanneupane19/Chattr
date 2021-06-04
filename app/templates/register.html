@@ -2,23 +2,52 @@
 {% block title %}{% endblock %}
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="{{url_for('static', filename='login-register.css')}}" />
 {% endblock head %}
 
 {% block content %}
-<div class="container">
-    <div class="form">
-        <h2 style='text-align:center;'>Register</h2>
-        <br>
-        <form method='POST'>
-            {{form.hidden_tag()}}
-            {{form.email()}}<br>
-            {{form.username()}}<br>
-            {{form.password()}}<br>
-            {{form.submit()}}<br>
-            <a href="{{ url_for('login') }}" style='color: #007fff'>Already have an account? Log In.</a><br>
-        </form>
+
+<div class="uk-container">
+    <div
+        class="uk-card uk-card-default uk-card-body uk-width-large uk-flex uk-flex-center uk-margin-medium-top uk-margin-auto">
+        <fieldset class="uk-fieldset">
+            <label class="uk-legend">Register</label>
+            <form method='POST'>
+                {{form.hidden_tag()}}
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        {{form.username(class="uk-input")}}
+                    </div>
+                </div>
+
+
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium">
+                        <span class="uk-form-icon" uk-icon="icon: mail"></span>
+                        {{form.email(class="uk-input")}}
+                    </div>
+                </div>
+
+
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium">
+                        <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                        {{form.password(class="uk-input")}}
+                    </div>
+                    <div class='uk-margin'>
+                        Already have an account? <a class="uk-link" href="{{ url_for('login') }}">Log in.</a>
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <div class='uk-inline uk-width-medium'>
+                        {{form.submit(class="uk-button uk-width-9-10 uk-button-primary")}}
+                    </div>
+                </div>
+            </form>
+        </fieldset>
     </div>
 </div>
+
 
 {% endblock content %}
