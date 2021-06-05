@@ -9,9 +9,9 @@
 <div class="uk-container">
     <div
         class="uk-card uk-card-default uk-card-body uk-width-large uk-flex uk-flex-center uk-margin-medium-top uk-margin-auto">
-        <fieldset class="uk-fieldset">
-            <label class="uk-legend">Register</label>
-            <form method='POST'>
+        <form method='POST'>
+            <fieldset class="uk-fieldset uk-fieldset-center">
+                <p class="uk-text uk-text-large uk-text-center uk-text-emphasis">Register</p>
                 {{form.hidden_tag()}}
                 <div class="uk-margin">
                     <div class="uk-inline uk-width-medium uk-margin-auto"">
@@ -28,26 +28,39 @@
                     </div>
                 </div>
 
-
                 <div class="uk-margin">
                     <div class="uk-inline uk-width-medium uk-margin-auto"">
                         <span class=" uk-form-icon" uk-icon="icon: lock"></span>
                         {{form.password(class="uk-input")}}
                     </div>
-                    <div class='uk-margin'>
-                        Already have an account? <a class="uk-link" href="{{ url_for('login') }}">Log in.</a>
-                    </div>
                 </div>
 
                 <div class="uk-margin">
                     <div class='uk-inline uk-width-medium uk-margin-auto'>
-                        {{form.submit(class="uk-button uk-width-9-10 uk-button-primary")}}
+                        {{form.submit(class="uk-button uk-width-1-1 uk-button-primary")}}
                     </div>
+                    {% if form.errors %}
+                        {% if form.username.errors %}
+                            {% for error in form.username.errors %}
+                                <p class='uk-text-center uk-width-medium uk-margin-auto'>{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <p class='uk-text-center uk-width-medium uk-margin-auto'>{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+
+                    {% else %}
+                        <div class='uk-text uk-text-center uk-margin'>
+                            Already have an account? <a class="uk-link" href="{{ url_for('login') }}">Log in.</a>
+                        </div>
+                    {% endif %}
                 </div>
-            </form>
-        </fieldset>
+            </fieldset>
+        </form>
     </div>
 </div>
-
 
 {% endblock content %}
