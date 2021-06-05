@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
-from .main import *
+from main import *
 
 
 class RegisterForm(FlaskForm):
@@ -15,6 +15,18 @@ class RegisterForm(FlaskForm):
         InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Register")
 
+    def validate_username(self, username):
+        existing_user_username = User.query.filter_by(
+            username=username.data).first()
+        if existing_user_username:
+            raise ValidationError(
+                "That username already exists. Please choose a different one.")
+
+    def validate_email(self, email):
+        existing_user_email = User.query.filter_by(email=email.data).first()
+        if existing_user_email:
+            raise ValidationError(
+                "That email address belongs to different user. Please choose a different one.")
 
 class LoginForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(
@@ -36,3 +48,24 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField(validators=[
         InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Reset Password")
+
+class UpdateAccountForm(FlaskForm):
+    email = StringField(validators=[InputRequired(), Email(
+        message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
+    username = StringField(validators=[InputRequired(), Length(
+        min=4, max=15)], render_kw={"placeholder": "Username"})
+    submit = SubmitField("Update Account")
+
+    def validate_username(self, username):
+        if current_user.username != username.data:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError(
+                    "That username already exists. Please choose a different one.")
+
+    def validate_email(self, email):
+        if current_user.email != email.data:
+            email = User.query.filter_by(email=email.data).first()
+            if email:
+                raise ValidationError(
+                    "That email address belongs to different user. Please choose a different one.")
