@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message as MailMessage
 import os
-from .forms import *
+from forms import *
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_admin import Admin, AdminIndexView
@@ -103,6 +103,8 @@ def login():
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('dashboard'))
+        if not user:
+            flash("This account does not exist.")
     return render_template("login.html", title="Login", form=form)
 
 
@@ -117,6 +119,7 @@ def register():
                         username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
+        flash("Your account has successfully been created!")
         return redirect(url_for('login'))
     return render_template("register.html", title="Register", form=form)
 
@@ -134,9 +137,25 @@ def dashboard():
     return render_template('dashboard.html', title="Dashboard")
 
 
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!')
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    return render_template('account.html', title="Account Settings", form=form)
+
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     form = PasswordResetRequestForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     if form.validate_on_submit():
         # Check if user exists in order to send email
         user = User.query.filter_by(email=form.email.data).first()
@@ -157,6 +176,8 @@ def forgot_password():
 
 @app.route('/reset-password/<token>', methods=['GET','POST'])
 def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     try:
         email = s.loads(token, salt='forgot-password', max_age=120)
     except SignatureExpired:
@@ -174,3 +195,7 @@ def reset_password(token):
         if not user:
             flash("This account does not exist.")
     return render_template('reset_password.html', form=form, title='Reset Password')
+
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
