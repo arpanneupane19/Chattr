@@ -56,6 +56,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(15), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
+    profile_picture = db.Column(db.String(20), default="default.jpg")
     messages = db.relationship(
         "Message", backref='sender', foreign_keys="Message.user_id", lazy='dynamic')
     teams = db.relationship('Team', secondary=users,
@@ -119,7 +120,6 @@ def register():
                         username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        flash("Your account has successfully been created!")
         return redirect(url_for('login'))
     return render_template("register.html", title="Register", form=form)
 
@@ -137,15 +137,34 @@ def dashboard():
     return render_template('dashboard.html', title="Dashboard")
 
 
+# Save profile pictures into profile_pics folder.
+def save_picture(profile_pic):
+    rand_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(profile_pic.filename)
+    picture_name = rand_hex + f_ext
+    path = os.path.join(app.root_path, 'static/profile_pics', picture_name)
+    profile_pic.save(path)
+
+    output_size = (125,125)
+    i = Image.open(profile_pic)
+    i.thumbnail(output_size)
+    i.save(path)
+    return picture_name
+
+
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     form = UpdateAccountForm()
     if form.validate_on_submit():
+        if form.profile_picture.data:
+            pic_file = save_picture(form.profile_picture.data)
+            current_user.profile_picture = pic_file
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
         flash('Your account has been updated!')
+        return redirect(url_for('account'))
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
@@ -181,9 +200,9 @@ def reset_password(token):
     try:
         email = s.loads(token, salt='forgot-password', max_age=120)
     except SignatureExpired:
-        return "<h1>This token is expired. Please try again.</h1>"
+        return "<h1>This link has expired. Please try again.</h1>"
     except BadTimeSignature:
-        return "<h1>This token is invalid</h1>"   
+        return "<h1>This link is invalid.</h1>"   
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
