@@ -19,55 +19,53 @@
 
 <body>
 
-    <div uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky; bottom: #transparent-sticky-navbar">
+    <div uk-sticky="sel-target: uk-navbar-container; cls-active: uk-navbar-sticky; bottom: #transparent-sticky-navbar">
         <nav class="uk-navbar-container" uk-navbar style="position: relative; z-index: 980;">
             <div class="uk-navbar-left">
                 <a class="uk-navbar-item uk-logo" href="{{ url_for('home') }}">App Name</a>
             </div>
-            <div class="uk-navbar-center">
-                {% if current_user.is_authenticated %}
-                <ul class='uk-navbar-nav'>
-                    <li>
-                        <a href="">Teams</a>
-                    </li>
-                    <li>
-                        <a href="">Create Team</a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('account') }}">Account</a>
-                    </li>
-                </ul>
-                {% else %}
-                <ul class='uk-navbar-nav'>
-                    <li>
-                        <a href="/#about">About</a>
-                    </li>
-                    <li>
-                        <a href="/#why">Why</a>
-                    </li>
-                </ul>
-                {% endif %}
-            </div>
             <div class="uk-navbar-right">
                 {% if current_user.is_authenticated %}
-                <ul class='uk-navbar-nav'>
-                    <li>
-                        <a href="{{ url_for('logout') }}">Logout</a>
-                    </li>
-                </ul>
+                    <ul class='uk-navbar-nav'>
+                        <li class="hover-over uk-visible@s"><a href="">Teams</a></li>
+                        <li class="hover-over uk-visible@s"><a href="">Create Team</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('account') }}">Account</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('logout') }}">Logout</a></li>
+                        <li class="hover-over uk-hidden@s"><a href="#" uk-toggle="target: #offcanvas-usage"><span uk-navbar-toggle-icon></span></a>
+                    </ul>
                 {% else %}
-                <ul class='uk-navbar-nav'>
-                    <li>
-                        <a href="{{ url_for('login') }}">Login</a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('register') }}">Register</a>
-                    </li>
-                </ul>
+                    <ul class='uk-navbar-nav'>
+                        <li class="hover-over uk-visible@s"><a href="/#about">About</a></li>
+                        <li class="hover-over uk-visible@s"><a href="/#why">Why</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('login') }}">Login</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('register') }}">Register</a></li>
+                        <li class="hover-over uk-hidden@s"><a href="#" uk-toggle="target: #offcanvas-usage"><span uk-navbar-toggle-icon></span></a>
+                    </ul>
                 {% endif %}
             </div>
         </nav>
     </div>
+    <div id="offcanvas-usage" uk-offcanvas="overlay: true; flip: true;">
+        <div class="uk-offcanvas-bar uk-flex uk-flex-column">
+            <button class="uk-offcanvas-close" type="button" uk-close></button>
+            {% if current_user.is_authenticated %}
+                <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
+                    <li><a href="#">TEAMS</a></li>
+                    <li><a href="#">CREATE TEAM</a></li>
+                    <li><a href="{{ url_for('account') }}">ACCOUNT</a></li>
+                    <li><a href="{{ url_for('logout') }}">LOGOUT</a></li>
+                </ul>
+            {% else %}
+                <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
+                    <li><a href="#">ABOUT</a></li>
+                    <li><a href="#">WHY</a></li>
+                    <li><a href="{{ url_for('login') }}">LOGIN</a></li>
+                    <li><a href="{{ url_for('register') }}">REGISTER</a></li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
     <main>
         {% block content %}
         {% endblock content %}
