@@ -70,3 +70,13 @@ class UpdateAccountForm(FlaskForm):
             if email:
                 raise ValidationError(
                     "That email address belongs to different user. Please choose a different one.")
+
+
+class CreateTeamForm(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
+    submit = SubmitField("Create Team")
+
+
+class EditTeamForm(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
+    submit = SubmitField("Save Changes")
