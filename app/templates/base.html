@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Name - {{title}}</title>
+    <title>Chattr - {{title}}</title>
     <link rel='stylesheet' href="{{ url_for('static', filename='style.css')}}" />
     <!-- UIkit CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.6.22/dist/css/uikit.min.css" />
@@ -18,17 +18,15 @@
 </head>
 
 <body>
-
-    <div uk-sticky="sel-target: uk-navbar-container; cls-active: uk-navbar-sticky; bottom: #transparent-sticky-navbar">
-        <nav class="uk-navbar-container" uk-navbar style="position: relative; z-index: 980;">
+        <nav class="uk-navbar-container" uk-navbar>
             <div class="uk-navbar-left">
-                <a class="uk-navbar-item uk-logo" href="{{ url_for('home') }}">App Name</a>
+                <a class="uk-navbar-item uk-logo" href="{{ url_for('home') }}">Chattr</a>
             </div>
             <div class="uk-navbar-right">
                 {% if current_user.is_authenticated %}
                     <ul class='uk-navbar-nav'>
-                        <li class="hover-over uk-visible@s"><a href="">Teams</a></li>
-                        <li class="hover-over uk-visible@s"><a href="">Create Team</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('my_teams') }}">Teams</a></li>
+                        <li class="hover-over uk-visible@s"><a href="{{ url_for('create_team') }}">Create Team</a></li>
                         <li class="hover-over uk-visible@s"><a href="{{ url_for('account') }}">Account</a></li>
                         <li class="hover-over uk-visible@s"><a href="{{ url_for('logout') }}">Logout</a></li>
                         <li class="hover-over uk-hidden@s"><a href="#" uk-toggle="target: #offcanvas-usage"><span uk-navbar-toggle-icon></span></a>
@@ -44,14 +42,13 @@
                 {% endif %}
             </div>
         </nav>
-    </div>
     <div id="offcanvas-usage" uk-offcanvas="overlay: true; flip: true;">
         <div class="uk-offcanvas-bar uk-flex uk-flex-column">
             <button class="uk-offcanvas-close" type="button" uk-close></button>
             {% if current_user.is_authenticated %}
                 <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
-                    <li><a href="#">TEAMS</a></li>
-                    <li><a href="#">CREATE TEAM</a></li>
+                    <li><a href="{{ url_for('my_teams') }}">TEAMS</a></li>
+                    <li><a href="{{ url_for('create_team') }}">CREATE TEAM</a></li>
                     <li><a href="{{ url_for('account') }}">ACCOUNT</a></li>
                     <li><a href="{{ url_for('logout') }}">LOGOUT</a></li>
                 </ul>
