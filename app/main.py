@@ -16,16 +16,18 @@ from flask_sslify import SSLify
 import json
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
+
 # Initializing packages
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 
 # Mandatory configurations
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -35,8 +37,10 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
 
+
 # Reset password 
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 # Login manager
 login_manager = LoginManager()
@@ -56,17 +60,19 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(15), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
-    profile_picture = db.Column(db.String(20), default="default.jpg")
+    profile_picture = db.Column(db.String(20), default="default.jpeg")
     messages = db.relationship(
         "Message", backref='sender', foreign_keys="Message.user_id", lazy='dynamic')
     teams = db.relationship('Team', secondary=users,
-                            backref='member', lazy='dynamic')
-
+                            backref='members', lazy='dynamic')
+    role = db.relationship('Team', backref='leader', lazy='dynamic')
 
 # Team schema
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    team_key = db.Column(db.String(40), nullable=False)
+    leader_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     messages = db.relationship(
         "Message", backref="team", foreign_keys="Message.team_id", lazy='dynamic')
 
@@ -78,11 +84,24 @@ class Message(db.Model):
 
 
 # User loader callback
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', title='404'), 404
+
+
+@app.errorhandler(403)
+def page_not_found(e):
+    return render_template('403.html'), 403
+
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('500.html'), 500
 
 
 @app.route("/")
@@ -137,6 +156,70 @@ def dashboard():
     return render_template('dashboard.html', title="Dashboard")
 
 
+@app.route('/my-teams', methods=['GET', 'POST'])
+@login_required
+def my_teams():
+    teams = Team.query.join(users).filter(users.c.user_id==current_user.id).all()
+    return render_template('my_teams.html', title='Teams', teams=teams, length_of_teams=len(teams))
+
+
+@app.route('/create-team', methods=['GET','POST'])
+@login_required
+def create_team():
+    form = CreateTeamForm()
+    if form.validate_on_submit():
+        new_team = Team(name=form.name.data, team_key=secrets.token_hex(10), leader=current_user)
+        db.session.add(new_team)
+        new_team.members.append(current_user)
+        db.session.commit()
+        return redirect(url_for('my_teams'))
+    return render_template('create_team.html', title="Create Team", form=form)
+
+
+@app.route('/edit-team/<team_key>', methods=['GET','POST'])
+@login_required
+def edit_team(team_key):
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+    form = EditTeamForm()
+    if form.validate_on_submit():
+        team.name = form.name.data
+        db.session.commit()
+        flash("Your team has been updated!")
+        return redirect(url_for('my_teams'))
+    elif request.method == 'GET':
+        form.name.data = team.name
+    if team.leader != current_user:
+        return render_template('403.html')
+    return render_template('edit_team.html', title="Edit Team", form=form, team=team)
+
+
+@app.route("/join-team/<team_key>", methods=['GET','POST'])
+@login_required
+def join_team(team_key):
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+    members = User.query.join(users).all()
+    if current_user in members:
+        return redirect(url_for('dashboard'))
+    else:
+        team.members.append(current_user)
+        db.session.commit()
+    return "Joined Team"
+
+
+@app.route('/team/<team_key>', methods=['GET','POST'])
+@login_required
+def team(team_key):
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+    messages = Message.query.filter_by(team=team).all()
+    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    return render_template('team.html', title=team.name, name=team.name, members=members)
+
+
+@socketio.on('connectUser')
+def connect_user():
+    print("Connected.")
+
+
 # Save profile pictures into profile_pics folder.
 def save_picture(profile_pic):
     rand_hex = secrets.token_hex(8)
@@ -169,6 +252,7 @@ def account():
         form.username.data = current_user.username
         form.email.data = current_user.email
     return render_template('account.html', title="Account Settings", form=form)
+
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
