@@ -15,7 +15,7 @@
                     <form method='POST' enctype='multipart/form-data'>
                         {{form.hidden_tag()}}
                         <fieldset class="uk-fieldset">    
-                            <img style='object-fit: contain; border-radius: 50%' data-src="../static/profile_pics/{{current_user.profile_picture}}" width='75' alt="{{current_user.username}}'s profile picture" uk-img uk-tooltip='title: Your current profile picture.'>
+                            <img style='object-fit: contain;' data-src="../static/profile_pics/{{current_user.profile_picture}}" width='75' alt="{{current_user.username}}'s profile picture" uk-img uk-tooltip='title: Your current profile picture.'>
                             <div class="uk-margin">
                                 <label class="uk-form-label">Username</label>
                                 {{form.username(class='uk-input')}}
@@ -69,4 +69,3 @@
 </div>
 
 {% endblock content %}
-<p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Account Settings</p>
