@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{% endblock %}
+{% block head %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+    integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+    crossorigin="anonymous"></script>
+{% endblock head %}
+{% block content %}
+
+<style>
+</style>
+<div class="uk-container uk-container-xlarge">
+    <div class="uk-flex uk-flex-row">
+        <div class="uk-width-1-5 sidebar">
+            <p class="uk-text uk-text-left uk-text-emphasis">Members</p>
+            {% for member in members %}
+                <span class="uk-text uk-text-left uk-text-small">{{member.username}}</span><br>
+            {% endfor %}
+        </div>
+        <div class="uk-width-4-5 chat-section">
+            <h3>Chats</h3>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    const socket = io()
+
+    socket.on('connect', () => {
+        socket.emit("connectUser")
+    })
+</script>
+{% endblock content %}
