@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{% endblock %}
+{% block head %}
+{{ super() }}
+{% endblock head %}
+
+{% block content %}
+
+<div class="uk-container">
+    <div class="uk-flex uk-flex-column">
+        <div class="uk-margin-medium-top">
+            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Create Team</p>
+            <div>
+                <div class="uk-card uk-card-default uk-card-small uk-card-body">
+                    <form method='POST' enctype='multipart/form-data'>
+                        {{form.hidden_tag()}}
+                        <fieldset class="uk-fieldset">    
+                            <div class="uk-margin">
+                                {{form.name(class='uk-input')}}
+                            </div>
+            
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <p class='uk-text'>{{ message }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            
+                            {% if form.name.errors %}
+                                {% for error in form.team.errors %}
+                                    <p class='uk-text uk-margin-auto'>{{ error }}</p>
+                                {% endfor %}
+                            {% endif %}
+                        
+                            <div class="uk-margin" uk-tooltip='title: Once you create the team name, everything else is filled out by the system.; pos: bottom; align: center;'>
+                                {{form.submit(class='uk-button uk-button-primary uk-width-1-1')}}
+                            </div>
+                        </fieldset>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock content %}
+<p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Account Settings</p>
