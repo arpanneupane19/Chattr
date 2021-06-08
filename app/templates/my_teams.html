@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% endblock %}
+{% block head %}
+{{ super() }}
+{% endblock head %}
+
+{% block content %}
+
+<div class="uk-container">
+    <div class="uk-flex uk-flex-column">
+        <div class="uk-margin-medium-top">
+            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">My Teams</p>
+                {% if length_of_teams != 0 %}
+                    <div class="uk-text-center" uk-grid>
+                        {% for team in teams %}
+                            <div class="uk-width-1-2">
+                                <div class="uk-card uk-card-default uk-card-body">
+                                    <a href="{{ url_for('team',team_key=team.team_key) }}" class="uk-card-title" uk-tooltip='title: Go to chat;'>{{team.name}}</a>
+                                    {% if team.leader == current_user %}
+                                        <a href="{{ url_for('edit_team', team_key=team.team_key) }}" style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: settings" uk-tooltip="title: Edit Team Settings"></a>
+                                    {% endif %}
+                                </div>
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <p class='uk-text uk-text-left'>{{ message }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black">You currently have no teams.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}
