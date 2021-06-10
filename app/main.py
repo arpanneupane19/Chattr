@@ -197,13 +197,33 @@ def edit_team(team_key):
 @login_required
 def join_team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
-    members = User.query.join(users).all()
+    members = User.query.join(users).filter(users.c.team_id==team.id).all()
     if current_user in members:
-        return redirect(url_for('dashboard'))
+        flash("You are already in this team.")
+        return redirect(url_for('my_teams'))
     else:
         team.members.append(current_user)
         db.session.commit()
-    return "Joined Team"
+        flash("You have successfully joined this team!")
+        return redirect(url_for('my_teams'))
+
+
+@app.route('/leave-team/<team_key>', methods=['GET','POST'])
+@login_required
+def leave_team(team_key):
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+    members_in_team = User.query.join(users).filter(users.c.team_id==team.id).all()
+    if team.leader == current_user:
+        flash("You are team leader. You cannot leave this team.")
+        return redirect(url_for('my_teams'))
+    elif current_user not in members_in_team:
+        return redirect(url_for('dashboard'))
+    else:
+        if current_user in members_in_team:
+            team.members.clear(current_user)
+            db.session.commit()
+            flash("You have left the team.")
+            return redirect(url_for('my_teams'))
 
 
 @app.route('/team/<team_key>', methods=['GET','POST'])
