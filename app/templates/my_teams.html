@@ -17,8 +17,21 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+                {% if form.search.errors %}
+                    {% for error in form.search.errors %}
+                    <p class='uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black'>{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+                <form method='POST' class="uk-search uk-width-1-1 uk-search-default uk-margin-small-bottom">
+                    {{form.hidden_tag()}}
+                    <div class="uk-flex uk-flex-row">
+                        <span uk-search-icon></span>
+                        {{form.search(class='uk-search-input uk-width-5-6 uk-margin-small-right')}}
+                        {{form.submit(class='uk-width-1-6 uk-button uk-button-primary')}}
+                    </div>
+                </form>
                 {% if length_of_teams != 0 %}
-                    <div uk-grid>
+                    <div class='uk-margin-small-top' uk-grid>
                         {% for team in teams %}
                             <div class="uk-width-1-2">
                                 <div class="uk-card uk-card-default uk-card-body uk-text-center">
@@ -26,10 +39,10 @@
                                         <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
                                         <div uk-dropdown>
                                             <ul class="uk-nav uk-dropdown-nav">
-                                                <li class="uk-active uk-text-left"><a href="#">Copy Team Invite</a></li>
+                                                <li class="uk-active uk-text-left" uk-tooltip="Team ID - {{team.team_key}}"><a href="#">Team Invite</a></li>
                                                 <li class="uk-active uk-text-left"><a href="#">Members</a></li>
                                                 {% if team.leader == current_user %}
-                                                    <li class="uk-active uk-text-left" uk-tooltip="You will have to promote someone to be team leader to leave."><a href="#">Leave Team?</a></li>
+                                                    <li class="uk-active uk-text-left" uk-tooltip="You will have to promote someone to be team leader to leave. To change leaders, edit team settings."><a href="#">Leave Team?</a></li>
                                                 {% else %}
                                                     <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #leave-modal">Leave Team?</a></li>
                                                     <div id="leave-modal" uk-modal>
@@ -45,7 +58,7 @@
                                                 {% endif %}
                                                 {% if team.leader == current_user %}
                                                     <li class="uk-nav-divider"></li>
-                                                    <li class="uk-active uk-text-left"><a href="#">Edit Team Settings</a></li>
+                                                    <li class="uk-active uk-text-left"><a href="{{ url_for('edit_team',team_key=team.team_key) }}">Edit Team Settings</a></li>
                                                 {% endif %}
                                             </ul>
                                         </div>                                        
