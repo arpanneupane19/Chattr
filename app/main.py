@@ -159,8 +159,23 @@ def dashboard():
 @app.route('/my-teams', methods=['GET', 'POST'])
 @login_required
 def my_teams():
+    form = SearchTeamForm()
     teams = Team.query.join(users).filter(users.c.user_id==current_user.id).all()
-    return render_template('my_teams.html', title='Teams', teams=teams, length_of_teams=len(teams))
+    if form.validate_on_submit():
+        team = Team.query.filter_by(team_key=form.search.data).first()
+        if team:
+            members = User.query.join(users).filter(users.c.team_id==team.id).all()
+            if current_user in members:
+                flash("You are already in this team.")
+                return redirect(url_for('my_teams'))
+            else:
+                team.members.append(current_user)
+                db.session.commit()
+                flash("You have successfully joined this team!")
+                return redirect(url_for('my_teams'))
+        else:
+            flash("Team does not exist.")
+    return render_template('my_teams.html', title='Teams', teams=teams, length_of_teams=len(teams), form=form)
 
 
 @app.route('/create-team', methods=['GET','POST'])
@@ -193,21 +208,6 @@ def edit_team(team_key):
     return render_template('edit_team.html', title="Edit Team", form=form, team=team)
 
 
-@app.route("/join-team/<team_key>", methods=['GET','POST'])
-@login_required
-def join_team(team_key):
-    team = Team.query.filter_by(team_key=team_key).first_or_404()
-    members = User.query.join(users).filter(users.c.team_id==team.id).all()
-    if current_user in members:
-        flash("You are already in this team.")
-        return redirect(url_for('my_teams'))
-    else:
-        team.members.append(current_user)
-        db.session.commit()
-        flash("You have successfully joined this team!")
-        return redirect(url_for('my_teams'))
-
-
 @app.route('/leave-team/<team_key>', methods=['GET','POST'])
 @login_required
 def leave_team(team_key):
@@ -217,10 +217,11 @@ def leave_team(team_key):
         flash("You are team leader. You cannot leave this team.")
         return redirect(url_for('my_teams'))
     elif current_user not in members_in_team:
-        return redirect(url_for('dashboard'))
+        flash("You are not in this team.")
+        return redirect(url_for('my_teams'))
     else:
         if current_user in members_in_team:
-            team.members.clear(current_user)
+            team.members.remove(current_user)
             db.session.commit()
             flash("You have left the team.")
             return redirect(url_for('my_teams'))
