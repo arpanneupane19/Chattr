@@ -28,6 +28,7 @@ class RegisterForm(FlaskForm):
             raise ValidationError(
                 "That email address belongs to different user. Please choose a different one.")
 
+
 class LoginForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(
         min=4, max=15)], render_kw={"placeholder": "Username"})
@@ -80,3 +81,8 @@ class CreateTeamForm(FlaskForm):
 class EditTeamForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
     submit = SubmitField("Save Changes")
+
+
+class SearchTeamForm(FlaskForm):
+    search = StringField(validators=[InputRequired(),Length(min=4, max=20)], render_kw={"placeholder":"Enter Team ID to join a team."})
+    submit = SubmitField("Join")
