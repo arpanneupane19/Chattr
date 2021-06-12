@@ -39,8 +39,8 @@
                                         <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
                                         <div uk-dropdown>
                                             <ul class="uk-nav uk-dropdown-nav">
-                                                <li class="uk-active uk-text-left" uk-tooltip="Team ID - {{team.team_key}}"><a href="#">Team Invite</a></li>
-                                                <li class="uk-active uk-text-left"><a href="#">Members</a></li>
+                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #team-invite-modal">Team Invite</a></li>
+                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #members-modal">Members</a></li>
                                                 {% if team.leader == current_user %}
                                                     <li class="uk-active uk-text-left" uk-tooltip="You will have to promote someone to be team leader to leave. To change leaders, edit team settings."><a href="#">Leave Team?</a></li>
                                                 {% else %}
@@ -56,6 +56,30 @@
                                                         </div>
                                                     </div>
                                                 {% endif %}
+                                                <div id="members-modal" uk-modal>
+                                                    <div class="uk-modal-dialog uk-modal-body">
+                                                        <h2 class="uk-modal-title">{{team.name}} - Members</h2>
+                                                        <div style='max-height: 150px; overflow-y: scroll; border: 1px solid lightgray; padding: 5px 5px;'>
+                                                            {% for member in team.members %}
+                                                                <p>{{member.username}}</p>
+                                                            {% endfor %}
+                                                        </div>
+                                                        <p class="uk-text-right">
+                                                            <button class="uk-button uk-button-primary uk-modal-close" type="button">Close</button>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div id="team-invite-modal" uk-modal>
+                                                    <div class="uk-modal-dialog uk-modal-body">
+                                                        <h2 class="uk-modal-title">Team Invite</h2> 
+                                                        <a href="{{ url_for('join_team', team_key=team.team_key)}}">App.domain{{url_for("join_team", team_key=team.team_key)}}</a>
+                                                        <p>The link above provides the team key which is used to join teams. You can share this link to people to allow them to join the "{{team.name}}" team.</p>
+                                                        <p class="uk-text-right">
+                                                            <button class="uk-button uk-button-primary uk-modal-close" type="button">Close</button>
+                                                        </p>
+                                                    </div>
+                                                </div>
                                                 {% if team.leader == current_user %}
                                                     <li class="uk-nav-divider"></li>
                                                     <li class="uk-active uk-text-left"><a href="{{ url_for('edit_team',team_key=team.team_key) }}">Edit Team Settings</a></li>
