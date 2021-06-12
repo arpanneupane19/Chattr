@@ -191,21 +191,53 @@ def create_team():
     return render_template('create_team.html', title="Create Team", form=form)
 
 
+def return_members(team_key):
+    team = Team.query.filter_by(team_key=team_key).first()
+    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    usernames = []
+
+    for member in members:
+        if member == team.leader:
+            usernames.insert(0,member.username)
+        else:
+            usernames.append(member.username)  
+    return usernames
+
+
 @app.route('/edit-team/<team_key>', methods=['GET','POST'])
 @login_required
 def edit_team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     form = EditTeamForm()
+    form.leader.choices = return_members(team.team_key)
     if form.validate_on_submit():
         team.name = form.name.data
+        if form.leader.data:
+            user = User.query.filter_by(username=form.leader.data).first()
+            team.leader = user
         db.session.commit()
-        flash("Your team has been updated!")
+        flash("Team settings have been updated.")
         return redirect(url_for('my_teams'))
     elif request.method == 'GET':
         form.name.data = team.name
+        form.leader.choices = return_members(team.team_key)
     if team.leader != current_user:
         return render_template('403.html')
     return render_template('edit_team.html', title="Edit Team", form=form, team=team)
+
+
+@app.route('/join-team/<team_key>', methods=['GET', 'POST'])
+def join_team(team_key):
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    if current_user in members:
+        flash("You are already in this team.")
+        return redirect(url_for('my_teams'))
+    else:
+        team.members.append(current_user)
+        db.session.commit()
+        flash("You have successfully joined this team!")
+        return redirect(url_for('my_teams'))
 
 
 @app.route('/leave-team/<team_key>', methods=['GET','POST'])
