@@ -21,7 +21,10 @@
                             </div>
 
                             <div class="uk-margin">
-                                <label class="uk-form-label">Team Leader</label>
+                                <label class="uk-form-label" for="form-stacked-select">Team Leader (You can choose team leader from options below, current leader is selected.)</label>
+                                <div class="uk-form-controls">
+                                    {{form.leader(class='uk-select',id='form-stacked-select')}}
+                                </div>
                             </div>
                         
                             {% with messages = get_flashed_messages() %}
@@ -38,7 +41,8 @@
                                 {% endfor %}
                             {% endif %}
                         
-                            <div class="uk-margin">
+
+                            <div class="uk-margin" uk-tooltip='title: Once you save these changes, these changes will immediately be reflected. If you changed team leader, whoever you picked will be team leader and will have control over the team. Make sure to double check!; pos: bottom;'>
                                 {{form.submit(class='uk-button uk-button-primary uk-width-1-1')}}
                             </div>
                         </fieldset>
@@ -54,3 +58,14 @@
 
 {% endblock content %}
 
+
+                            <!-- <div class="uk-margin">
+                                <label class="uk-form-label" for="form-stacked-select">Team Leader</label>
+                                <div class="uk-form-controls">
+                                    <select class="uk-select" id="form-stacked-select">
+                                        {% for member in members %}
+                                            <option>{{member.username}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div> -->
