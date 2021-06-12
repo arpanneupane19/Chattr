@@ -1,7 +1,7 @@
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
 from main import *
 
@@ -80,6 +80,7 @@ class CreateTeamForm(FlaskForm):
 
 class EditTeamForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
+    leader = SelectField('Leader')
     submit = SubmitField("Save Changes")
 
 
