@@ -84,6 +84,10 @@ class EditTeamForm(FlaskForm):
     submit = SubmitField("Save Changes")
 
 
+class AdvancedTeamSettingsForm(FlaskForm):
+    kick = SelectField("Kick Members?")
+    submit = SubmitField("Save Changes")
+
 class SearchTeamForm(FlaskForm):
     search = StringField(validators=[InputRequired(),Length(min=4, max=20)], render_kw={"placeholder":"Enter Team ID to join a team."})
     submit = SubmitField("Join")
