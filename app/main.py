@@ -144,6 +144,7 @@ def register():
 
 
 @app.route('/logout', methods=['GET', 'POST'])
+@login_required
 def logout():
     logout_user()
     session.clear()
@@ -160,9 +161,19 @@ def dashboard():
 @login_required
 def my_teams():
     form = SearchTeamForm()
+
+    # Get all of the teams that the current user is in by joining the query with users table.
     teams = Team.query.join(users).filter(users.c.user_id==current_user.id).all()
+
     if form.validate_on_submit():
+        # If a user is trying to join a team, first check if the team exists or not using team key.
         team = Team.query.filter_by(team_key=form.search.data).first()
+
+        '''
+        If the team exists, then query a list of all of the members in the team. 
+        If the team doesn't exist, then send a flash message that the team doesn't exist.
+        Then, check if the current user is already in the team, otherwise add them to the team.
+        '''
         if team:
             members = User.query.join(users).filter(users.c.team_id==team.id).all()
             if current_user in members:
@@ -174,7 +185,7 @@ def my_teams():
                 flash("You have successfully joined this team!")
                 return redirect(url_for('my_teams'))
         else:
-            flash("Team does not exist.")
+            flash("That team does not exist.")
     return render_template('my_teams.html', title='Teams', teams=teams, length_of_teams=len(teams), form=form)
 
 
@@ -183,6 +194,7 @@ def my_teams():
 def create_team():
     form = CreateTeamForm()
     if form.validate_on_submit():
+        # The team key is generated using the secrets library.
         new_team = Team(name=form.name.data, team_key=secrets.token_hex(10), leader=current_user)
         db.session.add(new_team)
         new_team.members.append(current_user)
@@ -191,15 +203,52 @@ def create_team():
     return render_template('create_team.html', title="Create Team", form=form)
 
 
-def return_members(team_key):
+@app.route('/delete-team/<team_key>', methods=['GET', 'POST'])
+@login_required
+def delete_team(team_key):
+
+    # First query the team in the db. If it exists, proceed, otherwise return a 404.
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+
+    # Then query all of the messages associated with this team.
+    messages = Message.query.filter_by(team=team).all()
+
+    # Clear all the rows in the users table associated with this team and delete this team.
+    '''
+    First delete all of the messages in this team, then remove all of the members with .clear(),
+    and then delete the team and save those changes.
+    '''
+    for message in messages:
+        db.session.delete(message)
+    team.members.clear()
+    db.session.delete(team)
+    db.session.commit()
+    flash("That team has been deleted.")
+    return redirect(url_for('my_teams'))
+
+
+# This function will return all of the members in a specific team.
+def return_members(team_key, page):
     team = Team.query.filter_by(team_key=team_key).first()
     members = User.query.join(users).filter(users.c.team_id==team.id).all()
     usernames = []
 
+    '''
+    It will first iterate through a list of members and if one of them is the leader,
+    it will insert that member to the first index of the "usernames" list. Otherwise, it 
+    will append them to the "usernames" list. 
+
+    That same list is then returned.
+
+    This function also takes in a "page" parameter which lets us know what page this function is being called from.
+    '''
     for member in members:
-        if member == team.leader:
-            usernames.insert(0,member.username)
-        else:
+        if page == 'edit':
+            if member == team.leader:
+                usernames.insert(0,member.username)
+            else:
+                usernames.append(member.username)
+        if page == 'advanced':
             usernames.append(member.username)  
     return usernames
 
@@ -207,9 +256,13 @@ def return_members(team_key):
 @app.route('/edit-team/<team_key>', methods=['GET','POST'])
 @login_required
 def edit_team(team_key):
-    team = Team.query.filter_by(team_key=team_key).first_or_404()
     form = EditTeamForm()
-    form.leader.choices = return_members(team.team_key)
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+
+    # Return the choices in the form.leader field using the return_members() function.
+    form.leader.choices = return_members(team.team_key, 'edit')
+
+    # This part is pretty straightforward in terms of form validation.
     if form.validate_on_submit():
         team.name = form.name.data
         if form.leader.data:
@@ -220,14 +273,49 @@ def edit_team(team_key):
         return redirect(url_for('my_teams'))
     elif request.method == 'GET':
         form.name.data = team.name
-        form.leader.choices = return_members(team.team_key)
+        form.leader.choices = return_members(team.team_key, 'edit')
     if team.leader != current_user:
         return render_template('403.html')
     return render_template('edit_team.html', title="Edit Team", form=form, team=team)
 
 
+@app.route('/advanced-team-settings/<team_key>', methods=['GET','POST'])
+def advanced_team_settings(team_key):
+    form = AdvancedTeamSettingsForm()
+    team = Team.query.filter_by(team_key=team_key).first_or_404()
+
+    # Return the choices in the form.kick field using the return_members() function.
+    form.kick.choices = return_members(team.team_key, 'advanced')
+
+    if form.validate_on_submit():
+        '''
+        Query to see if the user exists or not using the form.kick.data field.
+        If that user does exist and they are not the team leader, kick them from the team.
+
+        If they are team leader and are trying to kick themselves, send a message 
+        saying that they cannot.
+        '''
+        user = User.query.filter_by(username=form.kick.data).first()
+        if user:
+            # Some validation checks.
+            if user != team.leader:
+                team.members.remove(user)
+                db.session.commit()
+                return redirect(url_for('advanced_team_settings', team_key=team.team_key))
+            if user == team.leader:
+                flash("You're the leader, you cannot kick yourself out.")
+    return render_template('advanced_team_settings.html', title="Advanced Team Settings", form=form, team=team)
+
+
 @app.route('/join-team/<team_key>', methods=['GET', 'POST'])
+@login_required
 def join_team(team_key):
+    '''
+    First query the team using team key provided in the URL
+    and query all the members of the team.
+    
+    Then, check if the current user is already in the team, if not then added them to the team.
+    '''
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     members = User.query.join(users).filter(users.c.team_id==team.id).all()
     if current_user in members:
@@ -243,6 +331,14 @@ def join_team(team_key):
 @app.route('/leave-team/<team_key>', methods=['GET','POST'])
 @login_required
 def leave_team(team_key):
+
+    '''
+    First, query the team using team key. Then query the members in that team.
+    If the team leader is the current user and they're trying to leave, send
+    a message saying that they cannot.
+    If someone isn't in the team and is trying to leave, send a flash error.
+    Else, remove the current user from the team.
+    '''
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     members_in_team = User.query.join(users).filter(users.c.team_id==team.id).all()
     if team.leader == current_user:
@@ -292,6 +388,8 @@ def save_picture(profile_pic):
 @login_required
 def account():
     form = UpdateAccountForm()
+
+    # Pretty straightforward for this route.
     if form.validate_on_submit():
         if form.profile_picture.data:
             pic_file = save_picture(form.profile_picture.data)
@@ -312,6 +410,15 @@ def forgot_password():
     form = PasswordResetRequestForm()
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
+
+    '''
+    If a user forgot their password, they can enter in their email address to
+    receive a reset password link to reset the password to their account.
+
+    Emails are sent using Flask-Mail.
+
+    That link will also have a JSON Web Token.
+    '''
     if form.validate_on_submit():
         # Check if user exists in order to send email
         user = User.query.filter_by(email=form.email.data).first()
