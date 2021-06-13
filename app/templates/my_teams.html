@@ -39,13 +39,13 @@
                                         <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
                                         <div uk-dropdown>
                                             <ul class="uk-nav uk-dropdown-nav">
-                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #team-invite-modal">Team Invite</a></li>
-                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #members-modal">Members</a></li>
+                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #team-invite-modal{{team.team_key}}">Team Invite</a></li>
+                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #members-modal{{team.team_key}}">Members</a></li>
                                                 {% if team.leader == current_user %}
                                                     <li class="uk-active uk-text-left" uk-tooltip="You will have to promote someone to be team leader to leave. To change leaders, edit team settings."><a href="#">Leave Team?</a></li>
                                                 {% else %}
-                                                    <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #leave-modal">Leave Team?</a></li>
-                                                    <div id="leave-modal" uk-modal>
+                                                    <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #leave-modal{{team.team_key}}">Leave Team?</a></li>
+                                                    <div id="leave-modal{{team.team_key}}" uk-modal>
                                                         <div class="uk-modal-dialog uk-modal-body">
                                                             <h2 class="uk-modal-title">Leave Team?</h2>
                                                             <p>Are you sure you want to leave this team? If you leave this team, you will not be a member and all of your chats will be deleted if you leave this team.</p>
@@ -56,7 +56,7 @@
                                                         </div>
                                                     </div>
                                                 {% endif %}
-                                                <div id="members-modal" uk-modal>
+                                                <div id="members-modal{{team.team_key}}" uk-modal>
                                                     <div class="uk-modal-dialog uk-modal-body">
                                                         <h2 class="uk-modal-title">{{team.name}} - Members</h2>
                                                         <div style='max-height: 150px; overflow-y: scroll; border: 1px solid lightgray; padding: 5px 5px;'>
@@ -70,7 +70,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div id="team-invite-modal" uk-modal>
+                                                <div id="team-invite-modal{{team.team_key}}" uk-modal>
                                                     <div class="uk-modal-dialog uk-modal-body">
                                                         <h2 class="uk-modal-title">Team Invite</h2> 
                                                         <a href="{{ url_for('join_team', team_key=team.team_key)}}">App.domain{{url_for("join_team", team_key=team.team_key)}}</a>
