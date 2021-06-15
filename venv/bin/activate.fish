@@ -29,7 +29,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/arpan/Documents/ComputerProgramming/Python/Web/clone/venv"
+set -gx VIRTUAL_ENV "/Users/arpan/Documents/ComputerProgramming/Python/Web/Chattr/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
