@@ -14,7 +14,7 @@ from flask_admin.contrib.sqla import ModelView
 import secrets
 import hashlib
 from PIL import Image
-from flask_socketio import SocketIO, emit, send, join_room
+from flask_socketio import SocketIO, emit, send, join_room, leave_room
 from flask_sslify import SSLify
 import json
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
@@ -22,24 +22,22 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignat
 
 # Initializing packages
 app = Flask(__name__)
-bcrypt = Bcrypt(app)
-socketio = SocketIO(app, cors_allowed_origins='*')
-
 
 # Mandatory configurations
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+socketio = SocketIO(app, cors_allowed_origins='*')
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = os.environ.get('EMAIL')
-app.config['MAIL_PASSWORD'] = os.environ.get('PASSWORD')
+app.config['MAIL_USERNAME'] = os.environ.get("EMAIL")
+app.config['MAIL_PASSWORD'] = os.environ.get("PASSWORD")
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
-
+bcrypt = Bcrypt(app)
 
 # Reset password 
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -51,6 +49,7 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
+# Association table
 users = db.Table("users",
                  db.Column('user_id', db.Integer, db.ForeignKey("user.id")),
                  db.Column('team_id', db.Integer, db.ForeignKey("team.id"))
@@ -364,12 +363,82 @@ def team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     messages = Message.query.filter_by(team=team).all()
     members = User.query.join(users).filter(users.c.team_id==team.id).all()
-    return render_template('team.html', title=team.name, name=team.name, members=members)
+    return render_template('team.html', title=team.name, name=team.name, members=members, team=team)
 
+
+# Dictionary to map room ID to a list of users inside.
+room_to_users = dict({})
+
+# Dictionary to map user to a room that they're in.
+user_to_room = dict({})
 
 @socketio.on('connectUser')
-def connect_user():
-    print("Connected.")
+def connect_user(data):
+    # Get the room from the data passed in from the client
+    room = data['room'] 
+    user = data['user']
+
+    # Declare as global variable
+    global room_to_users
+    global user_to_room
+
+    """
+    This block below will first check if the room is already in the
+    dictionary or not, if it is in the dictionary, it will check if
+    the current user is already in the list or not, if not, it will
+    append them to the list.
+
+    However, if the room is not in the dictionary, it will create
+    the room. Once this is complete, it'll add the user to the 
+    user_to_room dictionary to map the username to room ID.
+    """
+    if room in room_to_users.keys():
+        print("Room exists.")
+        if user in room_to_users[room]:
+            print("User already exists inside.")
+        else:
+            room_to_users[room].append(user)
+    else:
+        room_to_users[room] = [user]        
+    user_to_room[user] = room
+    join_room(room)
+
+    print(f"User {user} has connected to room {room}")
+    print(f"Room -> Users: {room_to_users}")
+    print(f"User -> Room: {user_to_room}")
+
+
+@socketio.on('disconnect')
+def disconnect_user():
+    user = current_user.username
+    room = user_to_room.get(user)
+
+    """
+    This block below is used to disconnect users from rooms and
+    remove them from the dictionaries.
+
+    First, the user will be removed from the user_to_room dictionary.
+
+    Then, it'll check if the user is in room_to_users dictionary,
+    if they are, it'll remove that user from that dictionary.
+
+    Next, it'll check if the length of the room_to_users dictionary
+    is equal to 0 or not. If it's equal to 0, then no users are inside
+    and the room will be deleted. 
+    """
+    user_to_room.pop(user)
+
+    if user in room_to_users[room]:
+        room_to_users[room].remove(user)
+
+        if len(room_to_users[room]) == 0:
+            room_to_users.pop(room)
+            print(f"Room {room} has been deleted. {room_to_users}")
+
+    leave_room(room)
+    print(f"User {user} has left from room {room}.")
+    print(f"Room -> Users: {room_to_users}")
+    print(f"User -> Room: {user_to_room}")
 
 
 # Save profile pictures into profile_pics folder.
