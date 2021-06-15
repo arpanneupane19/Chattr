@@ -24,11 +24,22 @@
     </div>
 </div>
 
+<p class="team-id" style='visibility: hidden;'>{{team.team_key}}</p>
+<p class="current-user" style='visibility: hidden;'>{{current_user.username}}</p>
+
 <script type="text/javascript">
-    const socket = io()
+    const socket = io();
+
+    // Get the team ID and current user's username via HTML
+    let teamID = document.querySelector('.team-id').innerHTML
+    let currentUserName = document.querySelector('.current-user').innerHTML
 
     socket.on('connect', () => {
-        socket.emit("connectUser")
+        // Emit this event to the server along with the room and current user.
+        socket.emit('connectUser', {
+            room: teamID,
+            user: currentUserName
+        })
     })
 </script>
 {% endblock content %}
