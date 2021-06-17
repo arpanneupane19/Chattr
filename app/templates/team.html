@@ -9,18 +9,51 @@
 {% block content %}
 
 <style>
+    #chatbox-container {
+        height: 500px;
+        overflow-y: scroll;
+        padding: 20px;
+    }
+
+    .uk-align-right {
+        color: #fff;
+    }
 </style>
 <div class="uk-container uk-container-xlarge">
     <div class="uk-flex uk-flex-row">
-        <div class="uk-width-1-5 sidebar">
-            <p class="uk-text uk-text-left uk-text-emphasis">Members</p>
-            {% for member in members %}
-                <span class="uk-text uk-text-left uk-text-small">{{member.username}}</span><br>
-            {% endfor %}
+        <div class="uk-width-5-6">
+            <div class="uk-margin-medium-top">
+                <div class="uk-margin">
+                    <h3 class="uk-heading-divider">Chats - {{team.name}}</h3>
+                </div>
+
+                <div class="uk-container uk-background-secondary" id="chatbox-container">
+                    <div class="uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-2 uk-align-left">
+                        <div class="uk-flex uk-flex-between uk-margin-small-bottom">
+                            <span>arpanneupane07</span>
+                            <span>8:52 pm</span>
+                        </div>
+                        <span>Can someone explain question 2?</span>
+                    </div>
+
+                    <div
+                        class="uk-padding-small uk-background-primary uk-margin-small-bottom uk-width-1-2 uk-align-right">
+                        <div class="uk-flex uk-flex-between uk-margin-small-bottom">
+                            <span>arpanneupane072</span>
+                            <span>8:53 pm</span>
+                        </div>
+                        <span>Sure. What's up?</span>
+                    </div>
+
+                </div>
+            </div>
         </div>
-        <div class="uk-width-4-5 chat-section">
-            <h3>Chats</h3>
+        <div class="uk-width-1-6">
+            <div class="uk-margin-medium-top uk-margin-large-left">
+                <a href="#" uk-icon="more"></a>
+            </div>
         </div>
+
     </div>
 </div>
 
