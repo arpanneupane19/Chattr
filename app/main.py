@@ -39,7 +39,7 @@ app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
 bcrypt = Bcrypt(app)
 
-# Reset password 
+# Reset password
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 
@@ -69,6 +69,7 @@ class User(db.Model, UserMixin):
                             backref='members', lazy='dynamic')
     role = db.relationship('Team', backref='leader', lazy='dynamic')
 
+
 # Team schema
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,6 +80,7 @@ class Team(db.Model):
         "Message", backref="team", foreign_keys="Message.team_id", lazy='dynamic')
 
 
+# Message schema
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -165,7 +167,8 @@ def my_teams():
     form = SearchTeamForm()
 
     # Get all of the teams that the current user is in by joining the query with users table.
-    teams = Team.query.join(users).filter(users.c.user_id==current_user.id).all()
+    teams = Team.query.join(users).filter(
+        users.c.user_id == current_user.id).all()
 
     if form.validate_on_submit():
         # If a user is trying to join a team, first check if the team exists or not using team key.
@@ -177,7 +180,8 @@ def my_teams():
         Then, check if the current user is already in the team, otherwise add them to the team.
         '''
         if team:
-            members = User.query.join(users).filter(users.c.team_id==team.id).all()
+            members = User.query.join(users).filter(
+                users.c.team_id == team.id).all()
             if current_user in members:
                 flash("You are already in this team.")
                 return redirect(url_for('my_teams'))
@@ -191,13 +195,14 @@ def my_teams():
     return render_template('my_teams.html', title='Teams', teams=teams, length_of_teams=len(teams), form=form)
 
 
-@app.route('/create-team', methods=['GET','POST'])
+@app.route('/create-team', methods=['GET', 'POST'])
 @login_required
 def create_team():
     form = CreateTeamForm()
     if form.validate_on_submit():
         # The team key is generated using the secrets library.
-        new_team = Team(name=form.name.data, team_key=secrets.token_hex(10), leader=current_user)
+        new_team = Team(name=form.name.data,
+                        team_key=secrets.token_hex(10), leader=current_user)
         db.session.add(new_team)
         new_team.members.append(current_user)
         db.session.commit()
@@ -232,7 +237,7 @@ def delete_team(team_key):
 # This function will return all of the members in a specific team.
 def return_members(team_key, page):
     team = Team.query.filter_by(team_key=team_key).first()
-    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    members = User.query.join(users).filter(users.c.team_id == team.id).all()
     usernames = []
 
     '''
@@ -247,15 +252,15 @@ def return_members(team_key, page):
     for member in members:
         if page == 'edit':
             if member == team.leader:
-                usernames.insert(0,member.username)
+                usernames.insert(0, member.username)
             else:
                 usernames.append(member.username)
         if page == 'advanced':
-            usernames.append(member.username)  
+            usernames.append(member.username)
     return usernames
 
 
-@app.route('/edit-team/<team_key>', methods=['GET','POST'])
+@app.route('/edit-team/<team_key>', methods=['GET', 'POST'])
 @login_required
 def edit_team(team_key):
     form = EditTeamForm()
@@ -281,7 +286,7 @@ def edit_team(team_key):
     return render_template('edit_team.html', title="Edit Team", form=form, team=team)
 
 
-@app.route('/advanced-team-settings/<team_key>', methods=['GET','POST'])
+@app.route('/advanced-team-settings/<team_key>', methods=['GET', 'POST'])
 def advanced_team_settings(team_key):
     form = AdvancedTeamSettingsForm()
     team = Team.query.filter_by(team_key=team_key).first_or_404()
@@ -315,11 +320,11 @@ def join_team(team_key):
     '''
     First query the team using team key provided in the URL
     and query all the members of the team.
-    
+
     Then, check if the current user is already in the team, if not then added them to the team.
     '''
     team = Team.query.filter_by(team_key=team_key).first_or_404()
-    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    members = User.query.join(users).filter(users.c.team_id == team.id).all()
     if current_user in members:
         flash("You are already in this team.")
         return redirect(url_for('my_teams'))
@@ -330,10 +335,9 @@ def join_team(team_key):
         return redirect(url_for('my_teams'))
 
 
-@app.route('/leave-team/<team_key>', methods=['GET','POST'])
+@app.route('/leave-team/<team_key>', methods=['GET', 'POST'])
 @login_required
 def leave_team(team_key):
-
     '''
     First, query the team using team key. Then query the members in that team.
     If the team leader is the current user and they're trying to leave, send
@@ -342,7 +346,8 @@ def leave_team(team_key):
     Else, remove the current user from the team.
     '''
     team = Team.query.filter_by(team_key=team_key).first_or_404()
-    members_in_team = User.query.join(users).filter(users.c.team_id==team.id).all()
+    members_in_team = User.query.join(users).filter(
+        users.c.team_id == team.id).all()
     if team.leader == current_user:
         flash("You are team leader. You cannot leave this team.")
         return redirect(url_for('my_teams'))
@@ -357,12 +362,12 @@ def leave_team(team_key):
             return redirect(url_for('my_teams'))
 
 
-@app.route('/team/<team_key>', methods=['GET','POST'])
+@app.route('/team/<team_key>', methods=['GET', 'POST'])
 @login_required
 def team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     messages = Message.query.filter_by(team=team).all()
-    members = User.query.join(users).filter(users.c.team_id==team.id).all()
+    members = User.query.join(users).filter(users.c.team_id == team.id).all()
     return render_template('team.html', title=team.name, name=team.name, members=members, team=team)
 
 
@@ -372,10 +377,11 @@ room_to_users = dict({})
 # Dictionary to map user to a room that they're in.
 user_to_room = dict({})
 
+
 @socketio.on('connectUser')
 def connect_user(data):
     # Get the room from the data passed in from the client
-    room = data['room'] 
+    room = data['room']
     user = data['user']
 
     # Declare as global variable
@@ -399,7 +405,7 @@ def connect_user(data):
         else:
             room_to_users[room].append(user)
     else:
-        room_to_users[room] = [user]        
+        room_to_users[room] = [user]
     user_to_room[user] = room
     join_room(room)
 
@@ -449,7 +455,7 @@ def save_picture(profile_pic):
     path = os.path.join(app.root_path, 'static/profile_pics', picture_name)
     profile_pic.save(path)
 
-    output_size = (125,125)
+    output_size = (125, 125)
     i = Image.open(profile_pic)
     i.thumbnail(output_size)
     i.save(path)
@@ -496,7 +502,8 @@ def forgot_password():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             token = s.dumps(form.email.data, salt='forgot-password')
-            msg = MailMessage('Password Reset Request',sender='noreply@demo.com', recipients=[form.email.data])
+            msg = MailMessage('Password Reset Request',
+                              sender='noreply@demo.com', recipients=[form.email.data])
             msg.body = f''' 
             Hello {user.username}, we noticed that you wanted to reset your password. 
             To reset your password, use the link at the bottom of this email (this link will expire in 2 minutes). If this request was accidental, you may ignore this email.
@@ -509,7 +516,7 @@ def forgot_password():
     return render_template('forgot_password.html', title='Forgot Password', form=form)
 
 
-@app.route('/reset-password/<token>', methods=['GET','POST'])
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -518,7 +525,7 @@ def reset_password(token):
     except SignatureExpired:
         return "<h1>This link has expired. Please try again.</h1>"
     except BadTimeSignature:
-        return "<h1>This link is invalid.</h1>"   
+        return "<h1>This link is invalid.</h1>"
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -526,7 +533,8 @@ def reset_password(token):
             hashed_password = bcrypt.generate_password_hash(form.password.data)
             user.password = hashed_password
             db.session.commit()
-            flash("Your password has successfully been reset! You are able to log in now.")
+            flash(
+                "Your password has successfully been reset! You are able to log in now.")
         if not user:
             flash("This account does not exist.")
     return render_template('reset_password.html', form=form, title='Reset Password')
