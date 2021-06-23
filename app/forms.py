@@ -50,13 +50,15 @@ class ResetPasswordForm(FlaskForm):
         InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Reset Password")
 
+
 class UpdateAccountForm(FlaskForm):
     email = StringField(validators=[InputRequired(), Email(
         message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
     username = StringField(validators=[InputRequired(), Length(
         min=4, max=15)], render_kw={"placeholder": "Username"})
     submit = SubmitField("Update Account")
-    profile_picture = FileField(validators=[FileAllowed(['jpg', 'png', 'jpeg'])], render_kw={"placeholder":"Select Profile Picture"})
+    profile_picture = FileField(validators=[FileAllowed(
+        ['jpg', 'png', 'jpeg'])], render_kw={"placeholder": "Select Profile Picture"})
 
     def validate_username(self, username):
         if current_user.username != username.data:
@@ -74,12 +76,14 @@ class UpdateAccountForm(FlaskForm):
 
 
 class CreateTeamForm(FlaskForm):
-    name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
+    name = StringField(validators=[InputRequired(), Length(
+        min=4, max=50)], render_kw={"placeholder": "Team Name"})
     submit = SubmitField("Create Team")
 
 
 class EditTeamForm(FlaskForm):
-    name = StringField(validators=[InputRequired(), Length(min=4, max=50)], render_kw={"placeholder":"Team Name"})
+    name = StringField(validators=[InputRequired(), Length(
+        min=4, max=50)], render_kw={"placeholder": "Team Name"})
     leader = SelectField('Leader')
     submit = SubmitField("Save Changes")
 
@@ -88,6 +92,8 @@ class AdvancedTeamSettingsForm(FlaskForm):
     kick = SelectField("Kick Members?")
     submit = SubmitField("Save Changes")
 
+
 class SearchTeamForm(FlaskForm):
-    search = StringField(validators=[InputRequired(),Length(min=4, max=20)], render_kw={"placeholder":"Enter Team ID to join a team."})
+    search = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={
+                         "placeholder": "Enter Team ID to join a team."})
     submit = SubmitField("Join")
