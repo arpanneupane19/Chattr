@@ -5,11 +5,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
     integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
     crossorigin="anonymous"></script>
+
 {% endblock head %}
 {% block content %}
 
 <style>
-    #chatbox-container {
+    #messages-container {
         height: 500px;
         overflow-y: scroll;
         padding: 20px;
@@ -17,6 +18,11 @@
 
     .uk-align-right {
         color: #fff;
+    }
+
+    .message-info {
+        display: flex;
+        justify-content: space-between;
     }
 </style>
 <div class="uk-container uk-container-xlarge">
@@ -27,24 +33,39 @@
                     <h3 class="uk-heading-divider">Chats - {{team.name}}</h3>
                 </div>
 
-                <div class="uk-container uk-background-secondary" id="chatbox-container">
-                    <div class="uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-2 uk-align-left">
-                        <div class="uk-flex uk-flex-between uk-margin-small-bottom">
-                            <span>arpanneupane07</span>
-                            <span>8:52 pm</span>
-                        </div>
-                        <span>Can someone explain question 2?</span>
-                    </div>
+                <div class="uk-margin uk-background-secondary" id="messages-container">
+                    {% for message in messages %}
 
+                    {% if message.sender == current_user %}
                     <div
-                        class="uk-padding-small uk-background-primary uk-margin-small-bottom uk-width-1-2 uk-align-right">
+                        class="uk-padding-small uk-background-primary uk-margin-small-bottom uk-width-1-1 uk-align-right">
                         <div class="uk-flex uk-flex-between uk-margin-small-bottom">
-                            <span>arpanneupane072</span>
+                            <span>{{message.sender.username}}</span>
                             <span>8:53 pm</span>
                         </div>
-                        <span>Sure. What's up?</span>
+                        <span>{{message.message}}</span>
                     </div>
+                    {% else %}
+                    <div class=" uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-1
+                                uk-align-left">
+                        <div class="uk-flex uk-flex-between uk-margin-small-bottom">
+                            <span>{{message.sender.username}}</span>
+                            <span>8:53 pm</span>
+                        </div>
+                        <span>{{message.message}}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
 
+                <div class="uk-margin uk-flex uk-flex-row">
+                    <div class="uk-inline uk-margin uk-width-5-6">
+                        <span class="uk-form-icon" uk-icon="icon: commenting"></span>
+                        <input type="text" placeholder="Message" class="uk-input" id="messageInput" required />
+                    </div>
+                    <div class="uk-width-1-6 uk-margin-small-left">
+                        <button class="uk-button uk-button-primary uk-width-1-1" id="sendMessage">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,11 +82,19 @@
 <p class="current-user" style='visibility: hidden;'>{{current_user.username}}</p>
 
 <script type="text/javascript">
-    const socket = io();
+    const socket = io()
 
     // Get the team ID and current user's username via HTML
-    let teamID = document.querySelector('.team-id').innerHTML
-    let currentUserName = document.querySelector('.current-user').innerHTML
+    let teamID = document.querySelector('.team-id').textContent
+    let currentUserName = document.querySelector('.current-user').textContent
+
+    // Get the message input field and send message button
+    let messageInput = document.getElementById("messageInput")
+    let sendButton = document.getElementById("sendMessage")
+
+    // Messages container 
+    let messagesContainer = document.getElementById("messages-container")
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     socket.on('connect', () => {
         // Emit this event to the server along with the room and current user.
@@ -74,5 +103,118 @@
             user: currentUserName
         })
     })
+
+    // Do something when the button is pressed.
+    sendButton.addEventListener("click", () => {
+
+        /* 
+        First check if the message is empty or not, if it is empty,
+        send a notification to the user telling them to enter something in.
+ 
+        If it's not empty, then send the message to the server and display it.
+ 
+        I'm using messageInput.value.trim() so it doesn't take up too much space
+        and so that people won't be able to spam spaces.
+        */
+        if (messageInput.value.trim() === "") {
+            messageInput.value = ""
+            messageInput.focus()
+            UIkit.notification({
+                message: 'Enter something in!',
+                timeout: 2000,
+                pos: 'bottom-center'
+            });
+        }
+
+        if (messageInput.value.trim() !== "") {
+            /* 
+            Emit the message to the server and pass in the 
+            message, sender, and the team that the message is being 
+            sent to.
+            */
+            socket.emit('message', {
+                message: messageInput.value.trim(),
+                sender: currentUserName,
+                team: teamID
+            })
+            messageInput.value = ""
+            messageInput.focus()
+        }
+    })
+
+    // Do something when enter key is pressed on the messageInput field.
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.which === 13) {
+            // The code below does the same thing as the button
+
+            if (messageInput.value.trim() === "") {
+                messageInput.value = ""
+                messageInput.focus()
+                UIkit.notification({
+                    message: 'Enter something in!',
+                    timeout: 2000,
+                    pos: 'bottom-center'
+                });
+            }
+
+            if (messageInput.value.trim() !== "") {
+                socket.emit('message', {
+                    message: messageInput.value.trim(),
+                    sender: currentUserName,
+                    team: teamID
+                })
+                messageInput.value = ""
+                messageInput.focus()
+            }
+        }
+    })
+
+
+    // This function will render a new message onto the DOM.
+    function outputMessage(message) {
+        const div = document.createElement("div")
+        const timeAndSender = document.createElement("div") // This div will contain the time of the message and sender
+        const time = document.createElement("span")
+        const sender = document.createElement("span")
+        const messageText = document.createElement("span")
+
+        // Classes for the elements above
+        const senderClass = ['uk-padding-small', 'uk-margin-small-bottom', 'uk-width-1-1', 'uk-background-primary', 'uk-align-right']
+        const teamClass = ['uk-padding-small', 'uk-margin-small-bottom', 'uk-width-1-1', 'uk-background-muted', 'uk-align-left']
+        const timeAndSenderClass = ['uk-margin-small-bottom', 'uk-flex', 'uk-flex-between']
+
+
+        // Apply different classes to div depending on sender
+        if (message.sender == currentUserName) {
+            div.classList.add(...senderClass)
+        }
+        else {
+            div.classList.add(...teamClass)
+        }
+
+        // Add styling to timeAndSender div
+        timeAndSender.classList.add(...timeAndSenderClass)
+
+        // Add text 
+        time.innerHTML = message.team
+        sender.innerHTML = message.sender
+        messageText.innerHTML = message.message
+
+        // Append the sender and time to the timeAndSender div
+        timeAndSender.append(sender, time)
+
+        // Append the timeAndSender along with the message.
+        div.append(timeAndSender, messageText)
+
+        // Finally append the main div to the messagesContainer
+        messagesContainer.appendChild(div)
+    }
+
+    // Catch message event
+    socket.on('message', (message) => {
+        outputMessage(message)
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    })
 </script>
+
 {% endblock content %}
