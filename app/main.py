@@ -83,6 +83,8 @@ class Team(db.Model):
 # Message schema
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(), nullable=False)
+    read = db.Column(db.Boolean(), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.id"))
 
@@ -368,7 +370,7 @@ def team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     messages = Message.query.filter_by(team=team).all()
     members = User.query.join(users).filter(users.c.team_id == team.id).all()
-    return render_template('team.html', title=team.name, name=team.name, members=members, team=team)
+    return render_template('team.html', title=team.name, name=team.name, members=members, team=team, messages=messages)
 
 
 # Dictionary to map room ID to a list of users inside.
@@ -445,6 +447,44 @@ def disconnect_user():
     print(f"User {user} has left from room {room}.")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
+
+
+@socketio.on('message')
+def message(data):
+
+    # The code below is responsible for sending messages.
+    """
+    I will first get the message value, sender username, and team
+    by parsing through the data that was sent from the frontend.
+
+    I'll use the sender_username and team_key variables to query a User
+    and a Team object in order to save the message to the database.
+
+    Once all that is done, a new message will be saved to the database and returned
+    back to the frontend. 
+    """
+
+    # Get the data from the frontend
+    message = data['message']
+    sender_username = data['sender']
+    team_key = data['team']
+
+    # Query user and team object with data from the frontend
+    sender = User.query.filter_by(username=sender_username).first()
+    team = Team.query.filter_by(team_key=team_key).first()
+
+    # Create a new message object to save to the db
+    if len(room_to_users[team_key]) > 1:
+        new_message = Message(message=message, sender=sender,
+                              team=team, read=True)
+    if len(room_to_users[team_key]) == 1:
+        new_message = Message(message=message, sender=sender,
+                              team=team, read=False)
+    db.session.add(new_message)
+    db.session.commit()
+
+    # This will emit a "message" event by default to the frontend
+    send(data, room=team_key)
 
 
 # Save profile pictures into profile_pics folder.
