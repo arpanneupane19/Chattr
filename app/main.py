@@ -369,8 +369,11 @@ def leave_team(team_key):
 def team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     messages = Message.query.filter_by(team=team).all()
+
+    total_msgs = len(messages)
+
     members = User.query.join(users).filter(users.c.team_id == team.id).all()
-    return render_template('team.html', title=team.name, name=team.name, members=members, team=team, messages=messages)
+    return render_template('team.html', title=team.name, name=team.name, members=members, team=team, messages=messages, total_msgs=total_msgs)
 
 
 # Dictionary to map room ID to a list of users inside.
@@ -380,7 +383,7 @@ room_to_users = dict({})
 user_to_room = dict({})
 
 
-@socketio.on('connectUser')
+@socketio.on('join')
 def connect_user(data):
     # Get the room from the data passed in from the client
     room = data['room']
@@ -411,6 +414,8 @@ def connect_user(data):
     user_to_room[user] = room
     join_room(room)
 
+    emit("joinLeave", f"{user} has joined the room.",
+         to=room, include_self=False)
     print(f"User {user} has connected to room {room}")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
@@ -444,6 +449,8 @@ def disconnect_user():
             print(f"Room {room} has been deleted. {room_to_users}")
 
     leave_room(room)
+    emit("joinLeave", f"{user} has left the room.",
+         to=room, include_self=False)
     print(f"User {user} has left from room {room}.")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
@@ -484,7 +491,7 @@ def message(data):
     db.session.commit()
 
     # This will emit a "message" event by default to the frontend
-    send(data, room=team_key)
+    send(data, to=team_key)
 
 
 # Save profile pictures into profile_pics folder.
