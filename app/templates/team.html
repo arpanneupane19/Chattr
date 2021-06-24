@@ -29,8 +29,17 @@
                 </div>
 
                 <div class="uk-margin uk-background-secondary" id="messages-container">
+                    {% if total_msgs == 0 %}
+                    <div class=" uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-1
+                                uk-align-left">
+                        <div class="uk-flex uk-flex-between uk-margin-small-bottom">
+                            <span>Chattr Bot</span>
+                            <span>8:53 pm</span>
+                        </div>
+                        <span>No messages yet. Start the conversation :)</span>
+                    </div>
+                    {% else %}
                     {% for message in messages %}
-
                     {% if message.sender == current_user %}
                     <div
                         class="uk-padding-small uk-background-primary uk-margin-small-bottom uk-width-1-1 uk-align-right">
@@ -51,6 +60,7 @@
                     </div>
                     {% endif %}
                     {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="uk-margin uk-flex uk-flex-row">
@@ -67,6 +77,28 @@
         <div class="uk-width-1-6">
             <div class="uk-margin-medium-top uk-margin-large-left">
                 <a href="#" uk-icon="more"></a>
+            </div>
+            <div uk-dropdown>
+                <ul class="uk-nav uk-dropdown-nav">
+                    <li class="uk-active uk-text-left"><a href="#"
+                            uk-toggle="target: #members-modal{{team.team_key}}">Members</a></li>
+                    <li class="uk-active uk-text-left"><a href="{{ url_for('my_teams') }}">Leave Chat</a></li>
+                    <div id="members-modal{{team.team_key}}" uk-modal>
+                        <div class="uk-modal-dialog uk-modal-body">
+                            <h2 class="uk-modal-title">{{team.name}} - Members</h2>
+                            <div
+                                style='max-height: 150px; overflow-y: scroll; border: 1px solid lightgray; padding: 5px 5px;'>
+                                {% for member in team.members %}
+                                <p>{{member.username}}</p>
+                                {% endfor %}
+                            </div>
+                            <p class="uk-text-right">
+                                <button class="uk-button uk-button-primary uk-modal-close" type="button">Close</button>
+                            </p>
+                        </div>
+                    </div>
+
+                </ul>
             </div>
         </div>
 
@@ -93,10 +125,23 @@
 
     socket.on('connect', () => {
         // Emit this event to the server along with the room and current user.
-        socket.emit('connectUser', {
+        socket.emit('join', {
             room: teamID,
             user: currentUserName
         })
+    })
+
+    // What to do when a user joins/leaves room for chatting.
+    socket.on('joinLeave', (data) => {
+        outputMessage(
+            {
+                sender: "Chattr Bot",
+                team: "8:53 pm",
+                message: data
+            }
+        )
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
     })
 
     // Do something when the button is pressed.
