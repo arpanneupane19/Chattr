@@ -5,7 +5,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
     integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
     crossorigin="anonymous"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock head %}
 {% block content %}
 
@@ -19,6 +21,36 @@
     .uk-align-right {
         color: #fff;
     }
+
+    .members-border {
+        max-height: 150px;
+        overflow-y: scroll;
+        border: 1px solid rgb(236, 236, 236);
+    }
+
+    .member {
+        display: flex;
+        align-items: center;
+        padding: 5px;
+    }
+
+    .member:hover {
+        background: rgb(236, 236, 236);
+    }
+
+    .image {
+        display: inline-block;
+        border-radius: 50%;
+        overflow: hidden;
+        width: 50px;
+        height: 50px;
+    }
+
+    .image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 </style>
 <div class="uk-container uk-container-xlarge">
     <div class="uk-flex uk-flex-row">
@@ -30,11 +62,10 @@
 
                 <div class="uk-margin uk-background-secondary" id="messages-container">
                     {% if total_msgs == 0 %}
-                    <div class=" uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-1
+                    <div class="uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-1
                                 uk-align-left">
                         <div class="uk-flex uk-flex-between uk-margin-small-bottom">
                             <span>Chattr Bot</span>
-                            <span>8:53 pm</span>
                         </div>
                         <span>No messages yet. Start the conversation :)</span>
                     </div>
@@ -45,7 +76,7 @@
                         class="uk-padding-small uk-background-primary uk-margin-small-bottom uk-width-1-1 uk-align-right">
                         <div class="uk-flex uk-flex-between uk-margin-small-bottom">
                             <span>{{message.sender.username}}</span>
-                            <span>8:53 pm</span>
+                            <span>{{message.time}}</span>
                         </div>
                         <span>{{message.message}}</span>
                     </div>
@@ -54,7 +85,7 @@
                                 uk-align-left">
                         <div class="uk-flex uk-flex-between uk-margin-small-bottom">
                             <span>{{message.sender.username}}</span>
-                            <span>8:53 pm</span>
+                            <span>{{message.time}}</span>
                         </div>
                         <span>{{message.message}}</span>
                     </div>
@@ -86,10 +117,15 @@
                     <div id="members-modal{{team.team_key}}" uk-modal>
                         <div class="uk-modal-dialog uk-modal-body">
                             <h2 class="uk-modal-title">{{team.name}} - Members</h2>
-                            <div
-                                style='max-height: 150px; overflow-y: scroll; border: 1px solid lightgray; padding: 5px 5px;'>
+                            <div class='members-border'>
                                 {% for member in team.members %}
-                                <p>{{member.username}}</p>
+                                <div class="uk-flex member">
+                                    <div class="image uk-margin-small-right">
+                                        <img data-src="../static/profile_pics/{{member.profile_picture}}"
+                                            alt="{{member.username}}'s profile picture" uk-img>
+                                    </div>
+                                    <p>{{member.username}}</p>
+                                </div>
                                 {% endfor %}
                             </div>
                             <p class="uk-text-right">
@@ -110,6 +146,22 @@
 
 <script type="text/javascript">
     const socket = io()
+
+    // This function will return the current time in 12 hour format.
+    function getCurrentTime(date) {
+        let hours = date.getHours()
+        let minutes = date.getMinutes()
+        let ampm = hours >= 12 ? 'PM' : 'AM'
+
+        // Get 12 hour time by getting the remainder
+        hours = hours % 12
+        if (hours === 0) {
+            hours = 12
+        }
+        time = `${hours}:${minutes} ${ampm}`
+        return time
+    }
+
 
     // Get the team ID and current user's username via HTML
     let teamID = document.querySelector('.team-id').textContent
@@ -133,13 +185,11 @@
 
     // What to do when a user joins/leaves room for chatting.
     socket.on('joinLeave', (data) => {
-        outputMessage(
-            {
-                sender: "Chattr Bot",
-                team: "8:53 pm",
-                message: data
-            }
-        )
+        UIkit.notification({
+            message: data,
+            timeout: 3000,
+            pos: 'top-center'
+        });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     })
@@ -175,7 +225,8 @@
             socket.emit('message', {
                 message: messageInput.value.trim(),
                 sender: currentUserName,
-                team: teamID
+                team: teamID,
+                time: getCurrentTime(new Date)
             })
             messageInput.value = ""
             messageInput.focus()
@@ -201,7 +252,8 @@
                 socket.emit('message', {
                     message: messageInput.value.trim(),
                     sender: currentUserName,
-                    team: teamID
+                    team: teamID,
+                    time: getCurrentTime(new Date)
                 })
                 messageInput.value = ""
                 messageInput.focus()
@@ -236,7 +288,7 @@
         timeAndSender.classList.add(...timeAndSenderClass)
 
         // Add text 
-        time.innerHTML = message.team
+        time.innerHTML = message.time
         sender.innerHTML = message.sender
         messageText.innerHTML = message.message
 
@@ -253,6 +305,7 @@
     // Catch message event
     socket.on('message', (message) => {
         outputMessage(message)
+        console.log(getCurrentTime(new Date))
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     })
 </script>
