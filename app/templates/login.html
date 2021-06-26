@@ -12,40 +12,40 @@
         <form method='POST'>
             <fieldset class="uk-fieldset">
                 <p class="uk-text uk-text-large uk-text-center uk-text-emphasis">Login</p>
-                    {{form.hidden_tag()}}
-                    <div class="uk-margin">
-                        <div class="uk-inline uk-width-medium uk-margin-auto">
-                            <span class="uk-form-icon" uk-icon="icon: user"></span>
-                            {{form.username(class="uk-input")}}
-                        </div>
+                {{form.hidden_tag()}}
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium uk-margin-auto">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        {{form.username(class="uk-input")}}
                     </div>
+                </div>
 
-                    <div class="uk-margin">
-                        <div class="uk-inline uk-width-medium uk-margin-auto">
-                            <span class="uk-form-icon" uk-icon="icon: lock"></span>
-                            {{form.password(class="uk-input")}}
-                        </div>
+                <div class="uk-margin">
+                    <div class="uk-inline uk-width-medium uk-margin-auto">
+                        <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                        {{form.password(class="uk-input")}}
                     </div>
+                </div>
 
-                    <div class="uk-margin">
-                        <div class='uk-inline uk-width-medium uk-margin-auto'>
-                            {{form.submit(class="uk-button uk-width-1-1 uk-button-primary")}}
-                        </div>
+                <div class="uk-margin">
+                    <div class='uk-inline uk-width-medium uk-margin-auto'>
+                        {{form.submit(class="uk-button uk-width-1-1 uk-button-primary")}}
                     </div>
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                    {% for message in messages %}
-                    <p class='uk-text-center uk-width-medium uk-margin-auto'>{{ message }}</p>
-                    {% endfor %}
-                    {% else %}
-                    <div class='uk-text uk-text-center uk-margin'>
-                        Don't have an account? <a class="uk-link" href="{{ url_for('register') }}">Register now.</a>
-                    </div>
-                    {% endif %}
-                    {% endwith %}
-                    <div class='uk-text uk-text-center uk-margin-small-bottom'>
-                        <a class="uk-link" href="{{ url_for('forgot_password') }}">Forgot password?</a>
-                    </div>
+                </div>
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for message in messages %}
+                <p class='uk-text-center uk-width-medium uk-margin-auto'>{{ message }}</p>
+                {% endfor %}
+                {% else %}
+                <div class='uk-text uk-text-center uk-margin'>
+                    Don't have an account? <a class="uk-link" href="{{ url_for('register') }}">Register now.</a>
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class='uk-text uk-text-center uk-margin-small-bottom'>
+                    <a class="uk-link" href="{{ url_for('forgot_password') }}">Forgot password?</a>
+                </div>
             </fieldset>
         </form>
     </div>
