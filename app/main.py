@@ -85,6 +85,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(), nullable=False)
     read = db.Column(db.Boolean(), nullable=False)
+    time = db.Column(db.String(7), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.id"))
 
@@ -475,7 +476,9 @@ def message(data):
     message = data['message']
     sender_username = data['sender']
     team_key = data['team']
+    time = data['time']
 
+    print(time)
     # Query user and team object with data from the frontend
     sender = User.query.filter_by(username=sender_username).first()
     team = Team.query.filter_by(team_key=team_key).first()
@@ -483,10 +486,10 @@ def message(data):
     # Create a new message object to save to the db
     if len(room_to_users[team_key]) > 1:
         new_message = Message(message=message, sender=sender,
-                              team=team, read=True)
+                              team=team, time=time, read=True)
     if len(room_to_users[team_key]) == 1:
         new_message = Message(message=message, sender=sender,
-                              team=team, read=False)
+                              team=team, time=time, read=False)
     db.session.add(new_message)
     db.session.commit()
 
