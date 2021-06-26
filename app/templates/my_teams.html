@@ -6,96 +6,154 @@
 
 {% block content %}
 
+<style>
+    .members-border {
+        max-height: 150px;
+        overflow-y: scroll;
+        border: 1px solid rgb(236, 236, 236);
+    }
+
+    .member {
+        display: flex;
+        align-items: center;
+        padding: 5px;
+    }
+
+    .member:hover {
+        background: rgb(236, 236, 236);
+    }
+
+    .image {
+        display: inline-block;
+        border-radius: 50%;
+        overflow: hidden;
+        width: 50px;
+        height: 50px;
+    }
+
+    .image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+
 <div class="uk-container">
     <div class="uk-flex uk-flex-column">
         <div class="uk-margin-medium-top">
-            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">My Teams</p>
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        {% for message in messages %}
-                            <p class='uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black'>{{ message }}</p>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% if form.search.errors %}
-                    {% for error in form.search.errors %}
-                    <p class='uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black'>{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-                <form method='POST' class="uk-search uk-width-1-1 uk-search-default uk-margin-small-bottom">
-                    {{form.hidden_tag()}}
-                    <div class="uk-flex uk-flex-row">
-                        <span uk-search-icon></span>
-                        {{form.search(class='uk-search-input uk-width-5-6 uk-margin-small-right')}}
-                        {{form.submit(class='uk-width-1-6 uk-button uk-button-primary')}}
-                    </div>
-                </form>
-                {% if length_of_teams != 0 %}
-                    <div class='uk-margin-small-top' uk-grid>
-                        {% for team in teams %}
-                            <div class="uk-width-1-2">
-                                <div class="uk-card uk-card-default uk-card-body uk-text-center">
-                                    <a href="{{ url_for('team',team_key=team.team_key) }}" class="uk-card-title" uk-tooltip='title: Go to chat;'>{{team.name}}</a>
-                                        <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
-                                        <div uk-dropdown>
-                                            <ul class="uk-nav uk-dropdown-nav">
-                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #team-invite-modal{{team.team_key}}">Team Invite</a></li>
-                                                <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #members-modal{{team.team_key}}">Members</a></li>
-                                                {% if team.leader == current_user %}
-                                                    <li class="uk-active uk-text-left" uk-tooltip="You will have to promote someone to be team leader to leave. To change leaders, edit team settings."><a href="#">Leave Team?</a></li>
-                                                {% else %}
-                                                    <li class="uk-active uk-text-left"><a href="#" uk-toggle="target: #leave-modal{{team.team_key}}">Leave Team?</a></li>
-                                                    <div id="leave-modal{{team.team_key}}" uk-modal>
-                                                        <div class="uk-modal-dialog uk-modal-body">
-                                                            <h2 class="uk-modal-title">Leave Team?</h2>
-                                                            <p>Are you sure you want to leave this team? If you leave this team, you will not be a member and all of your chats will be deleted if you leave this team.</p>
-                                                            <p class="uk-text-right">
-                                                                <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-                                                                <a href="{{ url_for('leave_team',team_key=team.team_key) }}" class="uk-button uk-button-primary" type="button">Leave Team</a>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                                <div id="members-modal{{team.team_key}}" uk-modal>
-                                                    <div class="uk-modal-dialog uk-modal-body">
-                                                        <h2 class="uk-modal-title">{{team.name}} - Members</h2>
-                                                        <div style='max-height: 150px; overflow-y: scroll; border: 1px solid lightgray; padding: 5px 5px;'>
-                                                            {% for member in team.members %}
-                                                                <p>{{member.username}}</p>
-                                                            {% endfor %}
-                                                        </div>
-                                                        <p class="uk-text-right">
-                                                            <button class="uk-button uk-button-primary uk-modal-close" type="button">Close</button>
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div id="team-invite-modal{{team.team_key}}" uk-modal>
-                                                    <div class="uk-modal-dialog uk-modal-body">
-                                                        <h2 class="uk-modal-title">Team Invite</h2> 
-                                                        <a href="{{ url_for('join_team', team_key=team.team_key)}}">App.domain{{url_for("join_team", team_key=team.team_key)}}</a>
-                                                        <p>The link above provides the team key which is used to join teams. You can share this link to people to allow them to join the "{{team.name}}" team.</p>
-                                                        <p class="uk-text-right">
-                                                            <button class="uk-button uk-button-primary uk-modal-close" type="button">Close</button>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {% if team.leader == current_user %}
-                                                    <li class="uk-nav-divider"></li>
-                                                    <li class="uk-active uk-text-left"><a href="{{ url_for('edit_team',team_key=team.team_key) }}">Edit Team Settings</a></li>
-                                                {% endif %}
-                                            </ul>
-                                        </div>                                        
+            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">My Teams
+            </p>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <p class='uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black'>{{ message }}</p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            {% if form.search.errors %}
+            {% for error in form.search.errors %}
+            <p class='uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black'>{{ error }}</p>
+            {% endfor %}
+            {% endif %}
+            <form method='POST' class="uk-search uk-width-1-1 uk-search-default uk-margin-small-bottom">
+                {{form.hidden_tag()}}
+                <div class="uk-flex uk-flex-row">
+                    <span uk-search-icon></span>
+                    {{form.search(class='uk-search-input uk-width-5-6 uk-margin-small-right')}}
+                    {{form.submit(class='uk-width-1-6 uk-button uk-button-primary')}}
+                </div>
+            </form>
+            {% if length_of_teams != 0 %}
+            <div class='uk-margin-small-top' uk-grid>
+                {% for team in teams %}
+                <div class="uk-width-1-2">
+                    <div class="uk-card uk-card-default uk-card-body uk-text-center">
+                        <a href="{{ url_for('team',team_key=team.team_key) }}" class="uk-card-title"
+                            uk-tooltip='title: Go to chat;'>{{team.name}}</a>
+                        <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
+                        <div uk-dropdown>
+                            <ul class="uk-nav uk-dropdown-nav">
+                                <li class="uk-active uk-text-left"><a href="#"
+                                        uk-toggle="target: #team-invite-modal{{team.team_key}}">Team Invite</a></li>
+                                <li class="uk-active uk-text-left"><a href="#"
+                                        uk-toggle="target: #members-modal{{team.team_key}}">Members</a></li>
+                                {% if team.leader == current_user %}
+                                <li class="uk-active uk-text-left"
+                                    uk-tooltip="You will have to promote someone to be team leader to leave. To change leaders, edit team settings.">
+                                    <a href="#">Leave Team?</a>
+                                </li>
+                                {% else %}
+                                <li class="uk-active uk-text-left"><a href="#"
+                                        uk-toggle="target: #leave-modal{{team.team_key}}">Leave Team?</a></li>
+                                <div id="leave-modal{{team.team_key}}" uk-modal>
+                                    <div class="uk-modal-dialog uk-modal-body">
+                                        <h2 class="uk-modal-title">Leave Team?</h2>
+                                        <p>Are you sure you want to leave this team? If you leave this team, you will
+                                            not be a member and all of your chats will be deleted if you leave this
+                                            team.</p>
+                                        <p class="uk-text-right">
+                                            <button class="uk-button uk-button-default uk-modal-close"
+                                                type="button">Cancel</button>
+                                            <a href="{{ url_for('leave_team',team_key=team.team_key) }}"
+                                                class="uk-button uk-button-primary" type="button">Leave Team</a>
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                                {% endif %}
+                                <div id="members-modal{{team.team_key}}" uk-modal>
+                                    <div class="uk-modal-dialog uk-modal-body">
+                                        <h2 class="uk-modal-title">{{team.name}} - Members</h2>
+                                        <div class='members-border'>
+                                            {% for member in team.members %}
+                                            <div class="uk-flex member">
+                                                <div class="image uk-margin-small-right">
+                                                    <img data-src="../static/profile_pics/{{member.profile_picture}}"
+                                                        alt="{{member.username}}'s profile picture" uk-img>
+                                                </div>
+                                                <p>{{member.username}}</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <p class="uk-text-right">
+                                            <button class="uk-button uk-button-primary uk-modal-close"
+                                                type="button">Close</button>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div id="team-invite-modal{{team.team_key}}" uk-modal>
+                                    <div class="uk-modal-dialog uk-modal-body">
+                                        <h2 class="uk-modal-title">Team Invite</h2>
+                                        <a href="{{ url_for('join_team', team_key=team.team_key)}}">App.domain{{url_for("join_team",
+                                            team_key=team.team_key)}}</a>
+                                        <p>The link above provides the team key which is used to join teams. You can
+                                            share this link to people to allow them to join the "{{team.name}}" team.
+                                        </p>
+                                        <p class="uk-text-right">
+                                            <button class="uk-button uk-button-primary uk-modal-close"
+                                                type="button">Close</button>
+                                        </p>
+                                    </div>
+                                </div>
+                                {% if team.leader == current_user %}
+                                <li class="uk-nav-divider"></li>
+                                <li class="uk-active uk-text-left"><a
+                                        href="{{ url_for('edit_team',team_key=team.team_key) }}">Edit Team Settings</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
                     </div>
-                {% else %}
-                    <p class="uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black">You currently have no teams.</p>
-                {% endif %}
+                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <p class="uk-text uk-text-medium uk-text-light uk-text-emphasis uk-color-black">You currently have no teams.
+            </p>
+            {% endif %}
         </div>
     </div>
+</div>
 
 </div>
 
