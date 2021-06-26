@@ -9,48 +9,52 @@
 <div class="uk-container">
     <div class="uk-flex uk-flex-column">
         <div class="uk-margin-medium-top">
-            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Edit Team Settings</p>
+            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Edit Team
+                Settings</p>
             <div>
                 <div class="uk-card uk-card-default uk-card-small uk-card-body">
                     <form method='POST'>
                         {{form.hidden_tag()}}
-                        <fieldset class="uk-fieldset">    
+                        <fieldset class="uk-fieldset">
                             <div class="uk-margin">
                                 <label class="uk-form-label">Team Name</label>
                                 {{form.name(class='uk-input')}}
                             </div>
 
                             <div class="uk-margin">
-                                <label class="uk-form-label" for="form-stacked-select">Team Leader (You can choose team leader from options below, current leader is selected.)</label>
+                                <label class="uk-form-label" for="form-stacked-select">Team Leader (You can choose team
+                                    leader from options below, current leader is selected.)</label>
                                 <div class="uk-form-controls">
                                     {{form.leader(class='uk-select',id='form-stacked-select')}}
                                 </div>
                             </div>
-                        
+
                             {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    {% for message in messages %}
-                                        <p class='uk-text'>{{ message }}</p>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endwith %}
-                            
-                            {% if form.name.errors %}
-                                {% for error in form.name.errors %}
-                                    <p class='uk-text uk-margin-auto'>{{ error }}</p>
-                                {% endfor %}
+                            {% if messages %}
+                            {% for message in messages %}
+                            <p class='uk-text'>{{ message }}</p>
+                            {% endfor %}
                             {% endif %}
-                            
+                            {% endwith %}
+
+                            {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                            <p class='uk-text uk-margin-auto'>{{ error }}</p>
+                            {% endfor %}
+                            {% endif %}
+
                             <div class='uk-margin'>
-                                <a href="{{ url_for('advanced_team_settings', team_key=team.team_key) }}">Advanced Team Settings</a>
+                                <a href="{{ url_for('advanced_team_settings', team_key=team.team_key) }}">Advanced Team
+                                    Settings</a>
                             </div>
 
-                            <div class="uk-margin" uk-tooltip='title: Once you save these changes, these changes will immediately be reflected. If you changed team leader, whoever you picked will be team leader and will have control over the team. Make sure to double check!; pos: bottom;'>
+                            <div class="uk-margin"
+                                uk-tooltip='title: Once you save these changes, these changes will immediately be reflected. If you changed team leader, whoever you picked will be team leader and will have control over the team. Make sure to double check!; pos: bottom;'>
                                 {{form.submit(class='uk-button uk-button-primary uk-width-1-1')}}
                             </div>
                         </fieldset>
                     </form>
-                    
+
                 </div>
             </div>
         </div>
