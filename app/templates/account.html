@@ -9,18 +9,22 @@
 <div class="uk-container">
     <div class="uk-flex uk-flex-column">
         <div class="uk-margin-medium-top">
-            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Account Settings</p>
+            <p class="uk-text uk-text-large uk-text-light uk-text-emphasis uk-heading-divider uk-color-black">Account
+                Settings</p>
             <div>
                 <div class="uk-card uk-card-default uk-card-small uk-card-body">
                     <form method='POST' enctype='multipart/form-data'>
                         {{form.hidden_tag()}}
-                        <fieldset class="uk-fieldset">    
-                            <img style='object-fit: contain;' data-src="../static/profile_pics/{{current_user.profile_picture}}" width='75' alt="{{current_user.username}}'s profile picture" uk-img uk-tooltip='title: Your current profile picture.'>
+                        <fieldset class="uk-fieldset">
+                            <img style='object-fit: contain;'
+                                data-src="../static/profile_pics/{{current_user.profile_picture}}" width='75'
+                                alt="{{current_user.username}}'s profile picture" uk-img
+                                uk-tooltip='title: Your current profile picture.'>
                             <div class="uk-margin">
                                 <label class="uk-form-label">Username</label>
                                 {{form.username(class='uk-input')}}
                             </div>
-                    
+
                             <div class="uk-margin">
                                 <label class="uk-form-label">Email Address</label>
                                 {{form.email(class='uk-input')}}
@@ -29,37 +33,38 @@
                             <div class="uk-margin">
                                 <div uk-form-custom>
                                     {{form.profile_picture()}}
-                                    <button class="uk-button uk-button-default" type="button">Select Profile Picture</button>
+                                    <button class="uk-button uk-button-default" type="button">Select Profile
+                                        Picture</button>
                                 </div>
                             </div>
 
 
                             {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    {% for message in messages %}
-                                        <p class='uk-text'>{{ message }}</p>
-                                    {% endfor %}
-                                {% endif %}
+                            {% if messages %}
+                            {% for message in messages %}
+                            <p class='uk-text'>{{ message }}</p>
+                            {% endfor %}
+                            {% endif %}
                             {% endwith %}
-                            
+
                             {% if form.username.errors %}
-                                {% for error in form.username.errors %}
-                                    <p class='uk-text uk-margin-auto'>{{ error }}</p>
-                                {% endfor %}
+                            {% for error in form.username.errors %}
+                            <p class='uk-text uk-margin-auto'>{{ error }}</p>
+                            {% endfor %}
                             {% endif %}
 
                             {% if form.email.errors %}
-                                {% for error in form.email.errors %}
-                                    <p class='uk-text uk-margin-auto'>{{ error }}</p>
-                                {% endfor %}
+                            {% for error in form.email.errors %}
+                            <p class='uk-text uk-margin-auto'>{{ error }}</p>
+                            {% endfor %}
                             {% endif %}
-                        
+
                             <div class="uk-margin" uk-tooltip='title: Save changes; pos: bottom'>
                                 {{form.submit(class='uk-button uk-button-primary uk-width-1-1')}}
                             </div>
                         </fieldset>
                     </form>
-                    
+
                 </div>
             </div>
         </div>
