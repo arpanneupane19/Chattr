@@ -63,7 +63,7 @@
                 <div class="uk-margin uk-background-secondary" id="messages-container">
                     {% if total_msgs == 0 %}
                     <div class="uk-padding-small uk-background-muted uk-margin-small-bottom uk-width-1-1
-                                uk-align-left">
+                                uk-align-left" id='no-message-yet'>
                         <div class="uk-flex uk-flex-between uk-margin-small-bottom">
                             <span>Chattr Bot</span>
                         </div>
@@ -97,10 +97,10 @@
                 <div class="uk-margin uk-flex uk-flex-row">
                     <div class="uk-inline uk-margin uk-width-5-6">
                         <span class="uk-form-icon" uk-icon="icon: commenting"></span>
-                        <input type="text" placeholder="Message" class="uk-input" id="messageInput" required />
+                        <input type="text" placeholder="Message" class="uk-input" id="message-input" required />
                     </div>
                     <div class="uk-width-1-6 uk-margin-small-left">
-                        <button class="uk-button uk-button-primary uk-width-1-1" id="sendMessage">Send</button>
+                        <button class="uk-button uk-button-primary uk-width-1-1" id="send-message">Send</button>
                     </div>
                 </div>
             </div>
@@ -155,9 +155,25 @@
 
         // Get 12 hour time by getting the remainder
         hours = hours % 12
+
+        /* 
+        If the time is 12 AM, the .getHours() will return
+        0 instead of 12, so the code below just fixes that.
+        */
         if (hours === 0) {
             hours = 12
         }
+
+        /* 
+        The .getMinutes() will return the minutes without the 0 if 
+        the minutes are less than 10, so the minutes is being redefined below.
+
+        It'll basically check if the minutes are below 10, and if they are,
+        it will insert a 0 at the beginning, otherwise it will leave it as normal.
+        */
+        minutes = minutes < 10 ? '0' + minutes : minutes
+
+        // The time variable just contains the current time in a Hour:Minute AM/PM format.
         time = `${hours}:${minutes} ${ampm}`
         return time
     }
@@ -168,12 +184,19 @@
     let currentUserName = document.querySelector('.current-user').textContent
 
     // Get the message input field and send message button
-    let messageInput = document.getElementById("messageInput")
-    let sendButton = document.getElementById("sendMessage")
+    let messageInput = document.getElementById("message-input")
+    let sendButton = document.getElementById("send-message")
+
+    /* 
+    This will get the "No Messages Yet" message from the Chattr bot if
+    the team contains no messages.
+    */
+    let noMessageYet = document.getElementById("no-message-yet")
 
     // Messages container 
     let messagesContainer = document.getElementById("messages-container")
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
 
     socket.on('connect', () => {
         // Emit this event to the server along with the room and current user.
@@ -304,8 +327,14 @@
 
     // Catch message event
     socket.on('message', (message) => {
+        /* 
+        If the message container contains the "No Message Yet"
+        message on the webpage, remove it from the container.
+        */
+        if (messagesContainer.contains(noMessageYet)) {
+            messagesContainer.removeChild(noMessageYet)
+        }
         outputMessage(message)
-        console.log(getCurrentTime(new Date))
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     })
 </script>
