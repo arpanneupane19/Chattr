@@ -383,16 +383,21 @@ room_to_users = dict({})
 # Dictionary to map user to a room that they're in.
 user_to_room = dict({})
 
+# Dictionary to map socket ID to username.
+id_to_user = dict({})
+
 
 @socketio.on('join')
 def connect_user(data):
     # Get the room from the data passed in from the client
     room = data['room']
     user = data['user']
+    socket_id = request.sid
 
     # Declare as global variable
     global room_to_users
     global user_to_room
+    global id_to_user
 
     """
     This block below will first check if the room is already in the
@@ -403,6 +408,9 @@ def connect_user(data):
     However, if the room is not in the dictionary, it will create
     the room. Once this is complete, it'll add the user to the 
     user_to_room dictionary to map the username to room ID.
+
+    Once all of that is done, it will map the socket_id or
+    request.sid to the user.
     """
     if room in room_to_users.keys():
         print("Room exists.")
@@ -413,6 +421,7 @@ def connect_user(data):
     else:
         room_to_users[room] = [user]
     user_to_room[user] = room
+    id_to_user[socket_id] = user
     join_room(room)
 
     emit("joinLeave", f"{user} has joined the room.",
@@ -420,41 +429,60 @@ def connect_user(data):
     print(f"User {user} has connected to room {room}")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
+    print(f"Socket ID -> User: {id_to_user}")
 
 
 @socketio.on('disconnect')
 def disconnect_user():
+    """
+    The code below is responsible for disconnecting users and
+    removing them from the following dictionaries: id_to_user, user_to_room, room_to_users.
+
+    Basically, users could open multiple tabs/windows to the same room and 
+    rejoin, but when they leave one tab/window, they'd be disconnecting 
+    from all the other tabs
+    and the code below will prevent that from happening.
+
+    First, the for loop will go through all the socket IDs connected with
+    the current user's username and for each socket ID, it will increment
+    the user_count variable by one.
+
+    If the user_count is more than one, then it won't fully disconnect the user
+    since they have multiple tabs/windows open to the same room meaning 
+    they're still in the room and are able to chat from those tabs/windows.
+
+    If the user_count is one, meaning that there is only one tab/window open 
+    to that room, that's only one connection so if they leave from that,
+    they fully disconnect from the room.
+    """
+    socket_id = request.sid
     user = current_user.username
     room = user_to_room.get(user)
+    user_count = 0
 
-    """
-    This block below is used to disconnect users from rooms and
-    remove them from the dictionaries.
+    for username in id_to_user.values():
+        if username == user:
+            user_count += 1
 
-    First, the user will be removed from the user_to_room dictionary.
+    if user_count == 1:
+        user_to_room.pop(user)
 
-    Then, it'll check if the user is in room_to_users dictionary,
-    if they are, it'll remove that user from that dictionary.
+        if user in room_to_users[room]:
+            room_to_users[room].remove(user)
 
-    Next, it'll check if the length of the room_to_users dictionary
-    is equal to 0 or not. If it's equal to 0, then no users are inside
-    and the room will be deleted. 
-    """
-    user_to_room.pop(user)
+            if len(room_to_users[room]) == 0:
+                room_to_users.pop(room)
+                print(f"Room {room} has been deleted. {room_to_users}")
 
-    if user in room_to_users[room]:
-        room_to_users[room].remove(user)
+        leave_room(room)
+        emit("joinLeave", f"{user} has left the room.",
+             to=room, include_self=False)
 
-        if len(room_to_users[room]) == 0:
-            room_to_users.pop(room)
-            print(f"Room {room} has been deleted. {room_to_users}")
-
-    leave_room(room)
-    emit("joinLeave", f"{user} has left the room.",
-         to=room, include_self=False)
+    id_to_user.pop(socket_id)
     print(f"User {user} has left from room {room}.")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
+    print(f"Socket ID -> User: {id_to_user}")
 
 
 @socketio.on('message')
