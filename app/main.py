@@ -115,21 +115,21 @@ def page_not_found(e):
 @app.route("/home")
 def home():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('my_teams'))
     return render_template("home.html", title="Home")
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('my_teams'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('my_teams'))
         if not user:
             flash("This account does not exist.")
     return render_template("login.html", title="Login", form=form)
@@ -138,7 +138,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('my_teams'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
@@ -156,12 +156,6 @@ def logout():
     logout_user()
     session.clear()
     return redirect(url_for('login'))
-
-
-@app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    return render_template('dashboard.html', title="Dashboard")
 
 
 @app.route('/my-teams', methods=['GET', 'POST'])
@@ -490,10 +484,10 @@ def message(data):
 
     # The code below is responsible for sending messages.
     """
-    I will first get the message value, sender username, and team
+    It'll will first get the message value, sender username, and team
     by parsing through the data that was sent from the frontend.
 
-    I'll use the sender_username and team_key variables to query a User
+    Then it'll use the sender_username and team_key variables to query a User
     and a Team object in order to save the message to the database.
 
     Once all that is done, a new message will be saved to the database and returned
@@ -506,7 +500,6 @@ def message(data):
     team_key = data['team']
     time = data['time']
 
-    print(time)
     # Query user and team object with data from the frontend
     sender = User.query.filter_by(username=sender_username).first()
     team = Team.query.filter_by(team_key=team_key).first()
@@ -565,7 +558,7 @@ def account():
 def forgot_password():
     form = PasswordResetRequestForm()
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('my_teams'))
 
     '''
     If a user forgot their password, they can enter in their email address to
@@ -597,7 +590,7 @@ def forgot_password():
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('my_teams'))
     try:
         email = s.loads(token, salt='forgot-password', max_age=120)
     except SignatureExpired:
