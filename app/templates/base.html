@@ -49,17 +49,17 @@
             <button class="uk-offcanvas-close" type="button" uk-close></button>
             {% if current_user.is_authenticated %}
             <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
-                <li><a href="{{ url_for('my_teams') }}">TEAMS</a></li>
-                <li><a href="{{ url_for('create_team') }}">CREATE TEAM</a></li>
-                <li><a href="{{ url_for('account') }}">ACCOUNT</a></li>
-                <li><a href="{{ url_for('logout') }}">LOGOUT</a></li>
+                <li><a href="{{ url_for('my_teams') }}">Teams</a></li>
+                <li><a href="{{ url_for('create_team') }}">Create Team</a></li>
+                <li><a href="{{ url_for('account') }}">Account</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
             {% else %}
             <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
-                <li><a href="#">ABOUT</a></li>
-                <li><a href="#">WHY</a></li>
-                <li><a href="{{ url_for('login') }}">LOGIN</a></li>
-                <li><a href="{{ url_for('register') }}">REGISTER</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Why</a></li>
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
             </ul>
             {% endif %}
         </div>
