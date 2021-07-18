@@ -27,6 +27,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
@@ -49,10 +50,10 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-# Association table
+# Association table (creates an association table between users, teams, and last_message_seen)
 users = db.Table("users",
                  db.Column('user_id', db.Integer, db.ForeignKey("user.id")),
-                 db.Column('team_id', db.Integer, db.ForeignKey("team.id"))
+                 db.Column('team_id', db.Integer, db.ForeignKey("team.id")),
                  )
 
 
@@ -63,10 +64,15 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(15), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     profile_picture = db.Column(db.String(20), default="default.jpeg")
+
+    # This just creates a back reference to a message object to save the sender of the message
     messages = db.relationship(
-        "Message", backref='sender', foreign_keys="Message.user_id", lazy='dynamic')
+        "Message", backref='sender', foreign_keys="Message.sender_id", lazy='dynamic')
+
+    # Creates a back reference for members of a team
     teams = db.relationship('Team', secondary=users,
-                            backref='members', lazy='dynamic')
+                            backref=db.backref("members", lazy='dynamic'))
+
     role = db.relationship('Team', backref='leader', lazy='dynamic')
 
 
@@ -75,7 +81,11 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     team_key = db.Column(db.String(40), nullable=False)
+
+    # This is a foreign key for the leader of the team (person who originally made it)
     leader_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # this just creates a back reference to a message object to save the team that the message was sent to
     messages = db.relationship(
         "Message", backref="team", foreign_keys="Message.team_id", lazy='dynamic')
 
@@ -86,7 +96,9 @@ class Message(db.Model):
     message = db.Column(db.String(), nullable=False)
     read = db.Column(db.Boolean(), nullable=False)
     time = db.Column(db.String(7), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+    # These two create foreign keys for the sender of the message and the team the message was sent to.
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.id"))
 
 
@@ -172,7 +184,7 @@ def my_teams():
         team = Team.query.filter_by(team_key=form.search.data).first()
 
         '''
-        If the team exists, then query a list of all of the members in the team. 
+        If the team exists, then query a list of all of the members in the team.
         If the team doesn't exist, then send a flash message that the team doesn't exist.
         Then, check if the current user is already in the team, otherwise add them to the team.
         '''
@@ -239,8 +251,8 @@ def return_members(team_key, page):
 
     '''
     It will first iterate through a list of members and if one of them is the leader,
-    it will insert that member to the first index of the "usernames" list. Otherwise, it 
-    will append them to the "usernames" list. 
+    it will insert that member to the first index of the "usernames" list. Otherwise, it
+    will append them to the "usernames" list.
 
     That same list is then returned.
 
@@ -296,7 +308,7 @@ def advanced_team_settings(team_key):
         Query to see if the user exists or not using the form.kick.data field.
         If that user does exist and they are not the team leader, kick them from the team.
 
-        If they are team leader and are trying to kick themselves, send a message 
+        If they are team leader and are trying to kick themselves, send a message
         saying that they cannot.
         '''
         user = User.query.filter_by(username=form.kick.data).first()
@@ -400,7 +412,7 @@ def connect_user(data):
     append them to the list.
 
     However, if the room is not in the dictionary, it will create
-    the room. Once this is complete, it'll add the user to the 
+    the room. Once this is complete, it'll add the user to the
     user_to_room dictionary to map the username to room ID.
 
     Once all of that is done, it will map the socket_id or
@@ -425,6 +437,13 @@ def connect_user(data):
     print(f"User -> Room: {user_to_room}")
     print(f"Socket ID -> User: {id_to_user}")
 
+    team = Team.query.filter_by(team_key=room).first()
+    messages = Message.query.filter_by(team=team).all()
+    if len(room_to_users[room]) > 1:
+        for message in messages:
+            message.read = True
+            db.session.commit()
+
 
 @socketio.on('disconnect')
 def disconnect_user():
@@ -432,8 +451,8 @@ def disconnect_user():
     The code below is responsible for disconnecting users and
     removing them from the following dictionaries: id_to_user, user_to_room, room_to_users.
 
-    Basically, users could open multiple tabs/windows to the same room and 
-    rejoin, but when they leave one tab/window, they'd be disconnecting 
+    Basically, users could open multiple tabs/windows to the same room and
+    rejoin, but when they leave one tab/window, they'd be disconnecting
     from all the other tabs
     and the code below will prevent that from happening.
 
@@ -442,10 +461,10 @@ def disconnect_user():
     the user_count variable by one.
 
     If the user_count is more than one, then it won't fully disconnect the user
-    since they have multiple tabs/windows open to the same room meaning 
+    since they have multiple tabs/windows open to the same room meaning
     they're still in the room and are able to chat from those tabs/windows.
 
-    If the user_count is one, meaning that there is only one tab/window open 
+    If the user_count is one, meaning that there is only one tab/window open
     to that room, that's only one connection so if they leave from that,
     they fully disconnect from the room.
     """
