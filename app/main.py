@@ -18,6 +18,7 @@ from flask_socketio import SocketIO, emit, send, join_room, leave_room
 from flask_sslify import SSLify
 import json
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+import time
 
 
 # Initializing packages
@@ -27,7 +28,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
@@ -376,10 +376,9 @@ def leave_team(team_key):
 def team(team_key):
     team = Team.query.filter_by(team_key=team_key).first_or_404()
     messages = Message.query.filter_by(team=team).all()
-
+    members = User.query.join(users).filter(users.c.team_id == team.id).all()
     total_msgs = len(messages)
 
-    members = User.query.join(users).filter(users.c.team_id == team.id).all()
     return render_template('team.html', title=team.name, name=team.name, members=members, team=team, messages=messages, total_msgs=total_msgs)
 
 
@@ -409,7 +408,9 @@ def connect_user(data):
     This block below will first check if the room is already in the
     dictionary or not, if it is in the dictionary, it will check if
     the current user is already in the list or not, if not, it will
-    append them to the list.
+    append them to the list. If they are already in the list, then 
+    the app will assume they're rejoining from another tab and will 
+    emit a rejoined message to the current user.
 
     However, if the room is not in the dictionary, it will create
     the room. Once this is complete, it'll add the user to the
@@ -417,21 +418,27 @@ def connect_user(data):
 
     Once all of that is done, it will map the socket_id or
     request.sid to the user.
+
+    Then it will send an updateActiveUsers event to update the 
+    number of active users in the frontend.
     """
     if room in room_to_users.keys():
         print("Room exists.")
         if user in room_to_users[room]:
             print("User already exists inside.")
+            emit("rejoined", "You've rejoined.")
         else:
             room_to_users[room].append(user)
+            emit("joinLeave", f"{user} has joined the room.",
+                 to=room, include_self=False)
     else:
         room_to_users[room] = [user]
     user_to_room[user] = room
     id_to_user[socket_id] = user
     join_room(room)
+    emit("updateActiveUsers",
+         ('leave', room_to_users[room]), to=room)
 
-    emit("joinLeave", f"{user} has joined the room.",
-         to=room, include_self=False)
     print(f"User {user} has connected to room {room}")
     print(f"Room -> Users: {room_to_users}")
     print(f"User -> Room: {user_to_room}")
@@ -467,6 +474,9 @@ def disconnect_user():
     If the user_count is one, meaning that there is only one tab/window open
     to that room, that's only one connection so if they leave from that,
     they fully disconnect from the room.
+
+    It will also send a updateActiveUsers event once a user is removed from
+    the room_to_users dictionary to update the number of active users in the frontend.
     """
     socket_id = request.sid
     user = current_user.username
@@ -482,6 +492,9 @@ def disconnect_user():
 
         if user in room_to_users[room]:
             room_to_users[room].remove(user)
+
+            emit("updateActiveUsers",
+                 ('leave', room_to_users[room]), to=room)
 
             if len(room_to_users[room]) == 0:
                 room_to_users.pop(room)
