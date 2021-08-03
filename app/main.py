@@ -29,7 +29,7 @@ app = Flask(__name__)
 
 # Mandatory configurations
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('HEROKU_DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("HEROKU_DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -235,7 +235,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
-            if bcrypt.check_password_hash(user.password, form.password.data):
+            if bcrypt.check_password_hash(user.password, form.password.data.encode('utf-8')):
                 login_user(user)
                 return redirect(url_for('my_teams'))
         if not user:
@@ -249,7 +249,8 @@ def register():
         return redirect(url_for('my_teams'))
     form = RegisterForm()
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data)
+        hashed_password = bcrypt.generate_password_hash(
+            form.password.data.encode('utf-8'))
         new_user = User(email=form.email.data,
                         username=form.username.data, password=hashed_password)
         db.session.add(new_user)
