@@ -5,14 +5,24 @@
 {% endblock head %}
 
 {% block content %}
+<style>
+    #landing {
+        min-height: 100vh;
+    }
+
+    #about {
+        min-height: 100vh;
+    }
+</style>
+
 
 <div class="uk-container">
-    <section id='landing'>
-        <div class="uk-card uk-card-body uk-card-hover uk-card-large uk-margin-medium-top">
+    <section id='landing' class="uk-section">
+        <div class="uk-card uk-card-body uk-card-hover uk-card-large">
             <h3 class="uk-card-title">Organize teams and communicate how you want.</h3>
-            <p> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore
-                magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea.
+            <p> Chattr is a platform for you to communicate with people. Create a team, invite
+                others, and start communicating! You can use Chattr to communicate with co-workers,
+                friends, teammates, classmates, etc.
             </p>
             <div class="uk-flex uk-flex-left">
                 <div>
@@ -24,7 +34,6 @@
             </div>
         </div>
     </section>
-
 </div>
 
 {% endblock content %}
