@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message as MailMessage
 import os
-from forms import *
+from .forms import *
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_admin import Admin, AdminIndexView
@@ -641,7 +641,3 @@ def reset_password(token):
         if not user:
             flash("This account does not exist.")
     return render_template('reset_password.html', form=form, title='Reset Password')
-
-
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
