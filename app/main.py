@@ -65,7 +65,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(15), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.String(80), nullable=False)
     profile_picture = db.Column(db.String(20), default="default.jpeg")
 
     # This just creates a back reference to a message object to save the sender of the message
@@ -235,7 +235,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
-            if bcrypt.check_password_hash(user.password, form.password.data.encode('utf-8')):
+            if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('my_teams'))
         if not user:
@@ -250,7 +250,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(
-            form.password.data.encode('utf-8'))
+            form.password.data).decode("utf-8")
         new_user = User(email=form.email.data,
                         username=form.username.data, password=hashed_password)
         db.session.add(new_user)
