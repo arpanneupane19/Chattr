@@ -18,6 +18,7 @@ Flask-SQLAlchemy==2.5.1
 Flask-SSLify==0.1.5
 Flask-WTF==0.15.1
 greenlet==1.1.0
+gunicorn==20.1.0
 h11==0.12.0
 idna==3.2
 itsdangerous==2.0.1
