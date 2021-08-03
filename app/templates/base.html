@@ -55,8 +55,7 @@
             </ul>
             {% else %}
             <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
-                <li><a href="#">About</a></li>
-                <li><a href="#">Why</a></li>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('login') }}">Login</a></li>
                 <li><a href="{{ url_for('register') }}">Register</a></li>
             </ul>
