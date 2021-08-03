@@ -60,7 +60,7 @@
                 <div class="uk-flex uk-flex-row">
                     <span uk-search-icon></span>
                     {{form.search(class='uk-search-input uk-width-5-6 uk-margin-small-right')}}
-                    {{form.submit(class='uk-width-1-6 uk-button uk-button-primary')}}
+                    {{form.submit(class='uk-width-1-6 uk-button uk-button-primary uk-padding-remove-horizontal')}}
                 </div>
             </form>
             {% if length_of_teams != 0 %}
@@ -68,7 +68,7 @@
                 {% for team in teams %}
                 <div class="uk-width-1-2">
                     <div class="uk-card uk-card-default uk-card-body uk-text-center">
-                        <a href="{{ url_for('team',team_key=team.team_key) }}" class="uk-card-title"
+                        <a href="{{ url_for('team',team_key=team.team_key) }}" class="uk-card-title uk-card-large"
                             uk-tooltip='title: Go to chat;'>{{team.name}}</a>
                         <button style="cursor: pointer;" class="uk-card-badge uk-light" uk-icon="icon: more"></button>
                         <div uk-dropdown>
@@ -124,10 +124,12 @@
                                 <div id="team-invite-modal{{team.team_key}}" uk-modal>
                                     <div class="uk-modal-dialog uk-modal-body">
                                         <h2 class="uk-modal-title">Team Invite</h2>
-                                        <a href="{{ url_for('join_team', team_key=team.team_key)}}">App.domain{{url_for("join_team",
-                                            team_key=team.team_key)}}</a>
+                                        <p><a href="{{ url_for('join_team', team_key=team.team_key)}}">Copy this link
+                                                address</a> or copy this team ID: {{team.team_key}}.</p>
                                         <p>The link above provides the team key which is used to join teams. You can
-                                            share this link to people to allow them to join the "{{team.name}}" team.
+                                            share this link to people to allow them to join the "{{team.name}}" team, or
+                                            you can share
+                                            the team ID which people can type in the search bar to join the team.
                                         </p>
                                         <p class="uk-text-right">
                                             <button class="uk-button uk-button-primary uk-modal-close"
