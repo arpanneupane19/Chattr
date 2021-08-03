@@ -1,6 +1,6 @@
 from app.main import socketio, app
 
-mode = 'DEV'
+mode = 'PRODUCTION'
 
 if __name__ == '__main__' and mode == 'PRODUCTION':
     print("Running production server.")
