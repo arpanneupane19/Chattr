@@ -34,8 +34,7 @@
             </ul>
             {% else %}
             <ul class='uk-navbar-nav'>
-                <li class="hover-over uk-visible@s"><a href="/#about">About</a></li>
-                <li class="hover-over uk-visible@s"><a href="/#why">Why</a></li>
+                <li class="hover-over uk-visible@s"><a href="{{ url_for('home') }}">Home</a></li>
                 <li class="hover-over uk-visible@s"><a href="{{ url_for('login') }}">Login</a></li>
                 <li class="hover-over uk-visible@s"><a href="{{ url_for('register') }}">Register</a></li>
                 <li class="hover-over uk-hidden@s"><a href="#" uk-toggle="target: #offcanvas-usage"><span
