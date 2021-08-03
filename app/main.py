@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message as MailMessage
 import os
-from .forms import *
+from forms import *
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_admin import Admin, AdminIndexView
