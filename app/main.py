@@ -26,6 +26,8 @@ from wtforms.validators import InputRequired, Email, Length, ValidationError
 
 # Initializing packages
 app = Flask(__name__)
+if 'DYNO' in os.environ:
+    SSLify(app)
 
 # Mandatory configurations
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
