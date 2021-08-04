@@ -333,7 +333,6 @@ def delete_team(team_key):
     '''
     for message in messages:
         db.session.delete(message)
-    team.members.clear()
     db.session.delete(team)
     db.session.commit()
     flash("That team has been deleted.")
