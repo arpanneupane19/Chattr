@@ -100,7 +100,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(), nullable=False)
     read = db.Column(db.Boolean(), nullable=False)
-    time = db.Column(db.String(7), nullable=False)
+    time = db.Column(db.String(8), nullable=False)
 
     # These two create foreign keys for the sender of the message and the team the message was sent to.
     sender_id = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -268,9 +268,10 @@ def register():
         hashed_password = bcrypt.generate_password_hash(
             form.password.data).decode("utf-8")
         new_user = User(email=form.email.data,
-                        username=form.username.data, password=hashed_password)
+                        username=form.username.data.lower(), password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
+        flash(f'Account has been created for {form.username.data.lower()}.')
         return redirect(url_for('login'))
     return render_template("register.html", title="Register", form=form)
 
