@@ -68,7 +68,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(15), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
-    profile_picture = db.Column(db.String(20), default="default.jpeg")
+    profile_picture = db.Column(db.String(30), default="default.jpeg")
 
     # This just creates a back reference to a message object to save the sender of the message
     messages = db.relationship(
