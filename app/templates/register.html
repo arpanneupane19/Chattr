@@ -51,12 +51,11 @@
                     <p class='uk-text-center uk-width-medium uk-margin-auto'>{{ error }}</p>
                     {% endfor %}
                     {% endif %}
+                    {% endif %}
 
-                    {% else %}
                     <div class='uk-text uk-text-center uk-margin'>
                         Already have an account? <a class="uk-link" href="{{ url_for('login') }}">Log in.</a>
                     </div>
-                    {% endif %}
                 </div>
             </fieldset>
         </form>
