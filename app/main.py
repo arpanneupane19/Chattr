@@ -7,7 +7,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_mail import Mail, Message as MailMessage
 import os
 from datetime import datetime
-from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt, check_password_hash
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 import secrets
@@ -21,7 +21,7 @@ import time
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField
-from wtforms.validators import InputRequired, Email, Length, ValidationError
+from wtforms.validators import DataRequired, Email, Length, ValidationError
 
 
 # Initializing packages
@@ -114,12 +114,12 @@ def load_user(user_id):
 
 
 class RegisterForm(FlaskForm):
-    email = StringField(validators=[InputRequired(), Email(
-        message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
-    username = StringField(validators=[InputRequired(), Length(
+    email = StringField(validators=[DataRequired(), Email(
+        message="Invalid Email"), Length(min=7, max=320, message="Email field must be between %(min)d and %(max)d characters.")], render_kw={"placeholder": "Email Address"})
+    username = StringField(validators=[DataRequired(), Length(
         min=4, max=15)], render_kw={"placeholder": "Username"})
     password = PasswordField(validators=[
-        InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
+        DataRequired(), Length(min=4, message="Password must be a minimum of %(min)d characters.")], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Register")
 
     def validate_username(self, username):
@@ -137,31 +137,31 @@ class RegisterForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(
+    username = StringField(validators=[DataRequired(), Length(
         min=4, max=15)], render_kw={"placeholder": "Username"})
     password = PasswordField(validators=[
-        InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
+        DataRequired(), Length(min=4, message="Password must be a minimum of %(min)d characters.")], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Login")
 
 
 class PasswordResetRequestForm(FlaskForm):
-    email = StringField(validators=[InputRequired(), Email(
-        message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
+    email = StringField(validators=[DataRequired(), Email(
+        message="Invalid Email"), Length(min=7, max=320, message="Email field must be between %(min)d and %(max)d characters.")], render_kw={"placeholder": "Email Address"})
     submit = SubmitField("Request Password Reset")
 
 
 class ResetPasswordForm(FlaskForm):
-    email = StringField(validators=[InputRequired(), Email(
-        message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
+    email = StringField(validators=[DataRequired(), Email(
+        message="Invalid Email"), Length(min=7, max=320, message="Email field must be between %(min)d and %(max)d characters.")], render_kw={"placeholder": "Email Address"})
     password = PasswordField(validators=[
-        InputRequired(), Length(min=4)], render_kw={"placeholder": "Password (4 minimum)"})
+        DataRequired(), Length(min=4, message="Password must be a minimum of %(min)d characters.")], render_kw={"placeholder": "Password (4 minimum)"})
     submit = SubmitField("Reset Password")
 
 
 class UpdateAccountForm(FlaskForm):
-    email = StringField(validators=[InputRequired(), Email(
-        message="Invalid Email"), Length(max=50)], render_kw={"placeholder": "Email Address"})
-    username = StringField(validators=[InputRequired(), Length(
+    email = StringField(validators=[DataRequired(), Email(
+        message="Invalid Email"), Length(min=7, max=320, message="Email field must be between %(min)d and %(max)d characters.")], render_kw={"placeholder": "Email Address"})
+    username = StringField(validators=[DataRequired(), Length(
         min=4, max=15)], render_kw={"placeholder": "Username"})
     submit = SubmitField("Update Account")
     profile_picture = FileField(validators=[FileAllowed(
@@ -182,14 +182,22 @@ class UpdateAccountForm(FlaskForm):
                     "That email address belongs to different user. Please choose a different one.")
 
 
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField(validators=[
+        DataRequired(), Length(min=4, message="Password must be a minimum of %(min)d characters.")], render_kw={"placeholder": "Current Password (4 minimum)"})
+    new_password = PasswordField(validators=[
+        DataRequired(), Length(min=4, message="Password must be a minimum of %(min)d characters.")], render_kw={"placeholder": "New Password (4 minimum)"})
+    submit = SubmitField("Update Password")
+
+
 class CreateTeamForm(FlaskForm):
-    name = StringField(validators=[InputRequired(), Length(
+    name = StringField(validators=[DataRequired(), Length(
         min=4, max=50)], render_kw={"placeholder": "Team Name"})
     submit = SubmitField("Create Team")
 
 
 class EditTeamForm(FlaskForm):
-    name = StringField(validators=[InputRequired(), Length(
+    name = StringField(validators=[DataRequired(), Length(
         min=4, max=50)], render_kw={"placeholder": "Team Name"})
     leader = SelectField('Leader')
     submit = SubmitField("Save Changes")
@@ -201,7 +209,7 @@ class AdvancedTeamSettingsForm(FlaskForm):
 
 
 class SearchTeamForm(FlaskForm):
-    search = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={
+    search = StringField(validators=[DataRequired(), Length(min=4, max=20)], render_kw={
                          "placeholder": "Enter Team ID to join a team."})
     submit = SubmitField("Join")
 
@@ -227,12 +235,12 @@ def page_not_found(e):
 
 @app.errorhandler(403)
 def page_not_found(e):
-    return render_template('403.html'), 403
+    return render_template('403.html', title='403'), 403
 
 
 @app.errorhandler(500)
 def page_not_found(e):
-    return render_template('500.html'), 500
+    return render_template('500.html', title='500'), 500
 
 
 @app.route("/")
@@ -254,6 +262,9 @@ def login():
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('my_teams'))
+            if not bcrypt.check_password_hash(user.password, form.password.data):
+                flash(
+                    "Invalid password. Please enter in the correct password to log in.")
         if not user:
             flash("This account does not exist.")
     return render_template("login.html", title="Login", form=form)
@@ -697,6 +708,23 @@ def account():
         form.username.data = current_user.username
         form.email.data = current_user.email
     return render_template('account.html', title="Account Settings", form=form)
+
+
+@app.route("/change-password", methods=['GET', 'POST'])
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        current_password = form.current_password.data
+        if bcrypt.check_password_hash(current_user.password, current_password):
+            new_password = bcrypt.generate_password_hash(
+                form.new_password.data)
+            current_user.password = new_password
+            db.session.commit()
+            flash("Your password has successfully been updated!")
+            return redirect(url_for("account"))
+        if not bcrypt.check_password_hash(current_user.password, current_password):
+            flash("Your current password is incorrect. Please enter in the correct current password in order to update your password.")
+    return render_template("change_password.html", title="Change Password", form=form)
 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
