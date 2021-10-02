@@ -59,6 +59,11 @@
                             {% endfor %}
                             {% endif %}
 
+                            <div class='uk-margin'>
+                                <a href="{{ url_for('change_password') }}">Change Password</a>
+                            </div>
+
+
                             <div class="uk-margin" uk-tooltip='title: Save changes; pos: bottom'>
                                 {{form.submit(class='uk-button uk-button-primary uk-width-1-1')}}
                             </div>
