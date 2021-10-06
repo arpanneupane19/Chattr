@@ -24,6 +24,8 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextA
 from wtforms.validators import DataRequired, Email, Length, ValidationError
 
 
+mode = "PRODUCTION"
+
 # Initializing packages
 app = Flask(__name__)
 if 'DYNO' in os.environ:
@@ -31,7 +33,11 @@ if 'DYNO' in os.environ:
 
 # Mandatory configurations
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("HEROKU_DATABASE_URL")
+if mode == "PRODUCTION":
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        "HEROKU_DATABASE_URL")
+elif mode == "DEV":
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*')

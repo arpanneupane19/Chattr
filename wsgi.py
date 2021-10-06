@@ -1,11 +1,9 @@
-from app.main import socketio, app
+from app.main import socketio, app, mode
 
-mode = 'PRODUCTION'
-
-if __name__ == '__main__' and mode == 'PRODUCTION':
+if __name__ == '__main__' and mode == "PRODUCTION":
     print("Running production server.")
     app.run()
 
-elif __name__ == "__main__" and mode == 'DEV':
+elif __name__ == "__main__" and mode == "DEV":
     print("Running development server.")
     socketio.run(app, debug=True)
