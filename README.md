@@ -27,13 +27,13 @@ pip install -r requirements.txt
 ### macOS
 
 ```bash
-python3 app/main.py
+python3 wsgi.py
 ```
 
 ### Windows
 
 ```bash
-python app/main.py
+python wsgi.py
 ```
 
 Then you can go to https://localhost:5000 to run and test the app.
