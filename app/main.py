@@ -1,5 +1,5 @@
 # Code written by Arpan Neupane.
-# Copyright (c) Arpan Neupane 2021. All rights reserved.
+# Copyright (c) Arpan Neupane 2022-23. All rights reserved.
 
 from flask import Flask, render_template, redirect, url_for, request, session, flash, abort
 from flask_sqlalchemy import SQLAlchemy
