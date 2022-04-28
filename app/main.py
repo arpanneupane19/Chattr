@@ -130,13 +130,14 @@ class RegisterForm(FlaskForm):
 
     def validate_username(self, username):
         existing_user_username = User.query.filter_by(
-            username=username.data).first()
+            username=username.data.lower()).first()
         if existing_user_username:
             raise ValidationError(
                 "That username already exists. Please choose a different one.")
 
     def validate_email(self, email):
-        existing_user_email = User.query.filter_by(email=email.data).first()
+        existing_user_email = User.query.filter_by(
+            email=email.data.lower()).first()
         if existing_user_email:
             raise ValidationError(
                 "That email address belongs to different user. Please choose a different one.")
@@ -175,14 +176,14 @@ class UpdateAccountForm(FlaskForm):
 
     def validate_username(self, username):
         if current_user.username != username.data:
-            user = User.query.filter_by(username=username.data).first()
+            user = User.query.filter_by(username=username.data.lower()).first()
             if user:
                 raise ValidationError(
                     "That username already exists. Please choose a different one.")
 
     def validate_email(self, email):
         if current_user.email != email.data:
-            email = User.query.filter_by(email=email.data).first()
+            email = User.query.filter_by(email=email.data.lower()).first()
             if email:
                 raise ValidationError(
                     "That email address belongs to different user. Please choose a different one.")
@@ -705,8 +706,8 @@ def account():
         if form.profile_picture.data:
             pic_file = save_picture(form.profile_picture.data)
             current_user.profile_picture = pic_file
-        current_user.username = form.username.data
-        current_user.email = form.email.data
+        current_user.username = form.username.data.lower()
+        current_user.email = form.email.data.lower()
         db.session.commit()
         flash('Your account has been updated!')
         return redirect(url_for('account'))
