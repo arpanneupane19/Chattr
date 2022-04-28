@@ -1,3 +1,6 @@
+# Code written by Arpan Neupane.
+# Copyright (c) Arpan Neupane 2022-23. All rights reserved.
+
 from app.main import socketio, app, mode
 
 if __name__ == '__main__' and mode == "PRODUCTION":
